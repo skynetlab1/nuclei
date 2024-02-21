@@ -1,7 +1,6 @@
 package httputils
 
 import (
-	"bytes"
 	"compress/gzip"
 	"compress/zlib"
 	"fmt"
@@ -18,7 +17,7 @@ import (
 
 // readNNormalizeRespBody performs normalization on the http response object.
 // and fills body buffer with actual response body.
-func readNNormalizeRespBody(rc *ResponseChain, body *bytes.Buffer) (err error) {
+func readNNormalizeRespBody(rc *ResponseChain, body *strings.Builder) (err error) {
 	response := rc.resp
 	if response == nil {
 		return fmt.Errorf("something went wrong response is nil")
@@ -38,11 +37,11 @@ func readNNormalizeRespBody(rc *ResponseChain, body *bytes.Buffer) (err error) {
 		wrapped = origBody
 	}
 	// read response body to buffer
-	_, err = body.ReadFrom(wrapped)
+	_, err = io.Copy(body, wrapped)
 	if err != nil {
 		if strings.Contains(err.Error(), "gzip: invalid header") {
 			// its invalid gzip but we will still use it from original body
-			_, err = body.ReadFrom(origBody)
+			_, err = io.Copy(body, origBody)
 			if err != nil {
 				return errors.Wrap(err, "could not read response body after gzip error")
 			}

@@ -1,35 +1,34 @@
 package httputils
 
 import (
-	"bytes"
 	"fmt"
 	"net/http"
-	"sync"
+	"strings"
 
 	protoUtil "github.com/projectdiscovery/nuclei/v3/pkg/protocols/utils"
 )
 
-// use buffer pool for storing response body
-// and reuse it for each request
-var bufPool = sync.Pool{
-	New: func() any {
-		// The Pool's New function should generally only return pointer
-		// types, since a pointer can be put into the return interface
-		// value without an allocation:
-		return new(bytes.Buffer)
-	},
-}
+// // use buffer pool for storing response body
+// // and reuse it for each request
+// var bufPool = sync.Pool{
+// 	New: func() any {
+// 		// The Pool's New function should generally only return pointer
+// 		// types, since a pointer can be put into the return interface
+// 		// value without an allocation:
+// 		return new(bytes.Buffer)
+// 	},
+// }
 
-// getBuffer returns a buffer from the pool
-func getBuffer() *bytes.Buffer {
-	return bufPool.Get().(*bytes.Buffer)
-}
+// // getBuffer returns a buffer from the pool
+// func getBuffer() *bytes.Buffer {
+// 	return bytes.NewBuffer(make([]byte, 0, 4*1024))
+// }
 
-// putBuffer returns a buffer to the pool
-func putBuffer(buf *bytes.Buffer) {
-	buf.Reset()
-	bufPool.Put(buf)
-}
+// // putBuffer returns a buffer to the pool
+// func putBuffer(buf *bytes.Buffer) {
+// 	buf.Reset()
+// 	bufPool.Put(buf)
+// }
 
 // Performance Notes:
 // do not use http.Response once we create ResponseChain from it
@@ -45,9 +44,9 @@ func putBuffer(buf *bytes.Buffer) {
 // on every call to previous it returns the previous response
 // if it was redirected.
 type ResponseChain struct {
-	headers      *bytes.Buffer
-	body         *bytes.Buffer
-	fullResponse *bytes.Buffer
+	headers      *strings.Builder
+	body         *strings.Builder
+	fullResponse *strings.Builder
 	resp         *http.Response
 	reloaded     bool // if response was reloaded to its previous redirect
 }
@@ -59,25 +58,25 @@ func NewResponseChain(resp *http.Response, maxBody int64) *ResponseChain {
 		resp.Body = protoUtil.NewLimitResponseBodyWithSize(resp.Body, maxBody)
 	}
 	return &ResponseChain{
-		headers:      getBuffer(),
-		body:         getBuffer(),
-		fullResponse: getBuffer(),
+		headers:      &strings.Builder{},
+		body:         &strings.Builder{},
+		fullResponse: &strings.Builder{},
 		resp:         resp,
 	}
 }
 
 // Response returns the current response in the chain
-func (r *ResponseChain) Headers() *bytes.Buffer {
+func (r *ResponseChain) Headers() *strings.Builder {
 	return r.headers
 }
 
 // Body returns the current response body in the chain
-func (r *ResponseChain) Body() *bytes.Buffer {
+func (r *ResponseChain) Body() *strings.Builder {
 	return r.body
 }
 
 // FullResponse returns the current response in the chain
-func (r *ResponseChain) FullResponse() *bytes.Buffer {
+func (r *ResponseChain) FullResponse() *strings.Builder {
 	return r.fullResponse
 }
 
@@ -100,7 +99,7 @@ func (r *ResponseChain) Fill() error {
 	}
 
 	// load headers
-	err := DumpResponseIntoBuffer(r.resp, false, r.headers)
+	err := DumpRespHeadersIntoBuffer(r.resp, false, r.headers)
 	if err != nil {
 		return fmt.Errorf("error dumping response headers: %s", err)
 	}
@@ -126,17 +125,17 @@ func (r *ResponseChain) Fill() error {
 		DrainResponseBody(r.resp)
 	}
 
-	// join headers and body
-	r.fullResponse.Write(r.headers.Bytes())
-	r.fullResponse.Write(r.body.Bytes())
+	// preallocate buffer for full response
+	r.fullResponse.Grow(r.headers.Len() + r.body.Len() + 2)
+	r.fullResponse.WriteString(r.headers.String())
+	r.fullResponse.WriteString("\r\n")
+	r.fullResponse.WriteString(r.body.String())
+
 	return nil
 }
 
 // Close the response chain and releases the buffers.
 func (r *ResponseChain) Close() {
-	putBuffer(r.headers)
-	putBuffer(r.body)
-	putBuffer(r.fullResponse)
 	r.headers = nil
 	r.body = nil
 	r.fullResponse = nil

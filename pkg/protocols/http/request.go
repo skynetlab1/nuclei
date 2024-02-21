@@ -821,7 +821,7 @@ func (request *Request) executeRequest(input *contextargs.Context, generatedRequ
 	onceFunc := sync.OnceFunc(func() {
 		// if nuclei-project is enabled store the response if not previously done
 		if request.options.ProjectFile != nil && !fromCache {
-			if err := request.options.ProjectFile.Set(dumpedRequest, resp, respChain.Body().Bytes()); err != nil {
+			if err := request.options.ProjectFile.Set(dumpedRequest, resp, convUtil.Bytes(respChain.Body().String())); err != nil {
 				errx = errors.Wrap(err, "could not store in project file")
 			}
 		}
@@ -901,7 +901,7 @@ func (request *Request) executeRequest(input *contextargs.Context, generatedRequ
 
 		responseContentType := respChain.Response().Header.Get("Content-Type")
 		isResponseTruncated := request.MaxSize > 0 && respChain.Body().Len() >= request.MaxSize
-		dumpResponse(event, request, respChain.FullResponse().Bytes(), formedURL, responseContentType, isResponseTruncated, input.MetaInput.Input)
+		dumpResponse(event, request, convUtil.Bytes(respChain.FullResponse().String()), formedURL, responseContentType, isResponseTruncated, input.MetaInput.Input)
 
 		callback(event)
 

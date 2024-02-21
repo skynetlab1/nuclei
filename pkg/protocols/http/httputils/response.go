@@ -1,17 +1,17 @@
 package httputils
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 
 	protocolutil "github.com/projectdiscovery/nuclei/v3/pkg/protocols/utils"
 )
 
-// DumpResponseIntoBuffer dumps a http response without allocating a new buffer
+// DumpRespHeadersIntoBuffer dumps a http response without allocating a new buffer
 // for the response body.
-func DumpResponseIntoBuffer(resp *http.Response, body bool, buff *bytes.Buffer) (err error) {
+func DumpRespHeadersIntoBuffer(resp *http.Response, body bool, buff *strings.Builder) (err error) {
 	if resp == nil {
 		return fmt.Errorf("response is nil")
 	}
