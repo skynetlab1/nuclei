@@ -222,16 +222,19 @@ func (request *Request) executeParallelHTTP(input *contextargs.Context, dynamicV
 				return
 			}
 
-			select {
-			case <-spmHandler.Done():
-				return
-			case spmHandler.ResultChan <- func(inputx *contextargs.Context, grx *generatedRequest) error {
-				// putting ratelimiter here prevents any unnecessary waiting if any
-				request.options.RateLimiter.Take()
-				return request.executeRequest(inputx, grx, map[string]interface{}{}, false, wrappedCallback, 0)
-			}(input, httpRequest):
-				return
+			for {
+				select {
+				case <-spmHandler.Done():
+					return
+				case spmHandler.ResultChan <- func(inputx *contextargs.Context, grx *generatedRequest) error {
+					// putting ratelimiter here prevents any unnecessary waiting if any
+					request.options.RateLimiter.Take()
+					return request.executeRequest(inputx, grx, map[string]interface{}{}, false, wrappedCallback, 0)
+				}(input, httpRequest):
+					return
+				}
 			}
+
 		}(input, generatedHttpRequest)
 		request.options.Progress.IncrementRequests()
 	}
@@ -323,12 +326,15 @@ func (request *Request) executeTurboHTTP(input *contextargs.Context, dynamicValu
 				return
 			}
 
-			select {
-			case <-spmHandler.Done():
-				return
-			case spmHandler.ResultChan <- request.executeRequest(input, httpRequest, previous, false, wrappedCallback, 0):
-				return
+			for {
+				select {
+				case <-spmHandler.Done():
+					return
+				case spmHandler.ResultChan <- request.executeRequest(input, httpRequest, previous, false, wrappedCallback, 0):
+					return
+				}
 			}
+
 		}(generatedHttpRequest)
 		request.options.Progress.IncrementRequests()
 	}
