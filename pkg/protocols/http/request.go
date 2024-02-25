@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -184,6 +185,10 @@ func (request *Request) executeParallelHTTP(input *contextargs.Context, dynamicV
 			// stop all running requests and exit
 			spmHandler.Trigger()
 		}
+		runtime.SetFinalizer(event, func(event *output.InternalWrappedEvent) {
+			gologger.Info().Msgf("Collecting even reference for %s\n", request.options.TemplateID)
+			event.InternalEvent = nil
+		})
 	}
 
 	// iterate payloads and make requests
@@ -206,7 +211,7 @@ func (request *Request) executeParallelHTTP(input *contextargs.Context, dynamicV
 			input.MetaInput.Input = generatedHttpRequest.URL()
 		}
 		spmHandler.Acquire()
-		go func(httpRequest *generatedRequest) {
+		go func(input *contextargs.Context, httpRequest *generatedRequest) {
 			defer spmHandler.Release()
 			defer func() {
 				if r := recover(); r != nil {
@@ -220,15 +225,14 @@ func (request *Request) executeParallelHTTP(input *contextargs.Context, dynamicV
 			select {
 			case <-spmHandler.Done():
 				return
-			case spmHandler.ResultChan <- func() error {
+			case spmHandler.ResultChan <- func(inputx *contextargs.Context, grx *generatedRequest) error {
 				// putting ratelimiter here prevents any unnecessary waiting if any
 				request.options.RateLimiter.Take()
-				previous := make(map[string]interface{})
-				return request.executeRequest(input, httpRequest, previous, false, wrappedCallback, 0)
-			}():
+				return request.executeRequest(inputx, grx, map[string]interface{}{}, false, wrappedCallback, 0)
+			}(input, httpRequest):
 				return
 			}
-		}(generatedHttpRequest)
+		}(input, generatedHttpRequest)
 		request.options.Progress.IncrementRequests()
 	}
 	spmHandler.Wait()
