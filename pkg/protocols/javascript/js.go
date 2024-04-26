@@ -434,7 +434,7 @@ func (request *Request) executeRequestParallel(ctxParent context.Context, hostPo
 
 			// resize check point - nop if there are no changes
 			if shouldFollowGlobal && sg.Size != request.options.Options.PayloadConcurrency {
-				sg.Resize(request.options.Options.PayloadConcurrency)
+				//	sg.Resize(request.options.Options.PayloadConcurrency)
 			}
 
 			sg.Add()

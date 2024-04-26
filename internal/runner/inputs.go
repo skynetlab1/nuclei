@@ -50,7 +50,7 @@ func (r *Runner) initializeTemplatesHTTPInput() (*hybrid.HybridMap, error) {
 		}
 
 		if r.options.ProbeConcurrency > 0 && swg.Size != r.options.ProbeConcurrency {
-			swg.Resize(r.options.ProbeConcurrency)
+			//	swg.Resize(r.options.ProbeConcurrency)
 		}
 
 		swg.Add()

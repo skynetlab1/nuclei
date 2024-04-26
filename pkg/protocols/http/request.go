@@ -243,7 +243,7 @@ func (request *Request) executeParallelHTTP(input *contextargs.Context, dynamicV
 
 		// resize check point - nop if there are no changes
 		if shouldFollowGlobal && spmHandler.Size() != request.options.Options.PayloadConcurrency {
-			spmHandler.Resize(request.options.Options.PayloadConcurrency)
+			//	spmHandler.Resize(request.options.Options.PayloadConcurrency)
 		}
 
 		// break if stop at first match is found or host is unresponsive

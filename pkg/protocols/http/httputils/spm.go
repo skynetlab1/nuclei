@@ -183,7 +183,7 @@ func (h *StopAtFirstMatchHandler[T]) Release() {
 
 func (h *StopAtFirstMatchHandler[T]) Resize(size int) {
 	if h.sgPool.Size != size {
-		h.sgPool.Resize(size)
+		//	h.sgPool.Resize(size)
 	}
 }
 

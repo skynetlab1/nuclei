@@ -76,9 +76,9 @@ func (w *WorkPool) RefreshWithConfig(config WorkPoolConfig) {
 
 func (w *WorkPool) Refresh() {
 	if w.Default.Size != w.config.TypeConcurrency {
-		w.Default.Resize(w.config.TypeConcurrency)
+		//	w.Default.Resize(w.config.TypeConcurrency)
 	}
 	if w.Headless.Size != w.config.HeadlessTypeConcurrency {
-		w.Headless.Resize(w.config.HeadlessTypeConcurrency)
+		//		w.Headless.Resize(w.config.HeadlessTypeConcurrency)
 	}
 }

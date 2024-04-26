@@ -88,7 +88,7 @@ func (request *Request) ExecuteWithResults(input *contextargs.Context, metadata,
 
 			// resize check point - nop if there are no changes
 			if shouldFollowGlobal && swg.Size != request.options.Options.PayloadConcurrency {
-				swg.Resize(request.options.Options.PayloadConcurrency)
+				//	swg.Resize(request.options.Options.PayloadConcurrency)
 			}
 
 			value = generators.MergeMaps(vars, value)

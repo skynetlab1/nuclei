@@ -58,7 +58,7 @@ var (
 	sgResizeCheck = func() {
 		// resize check point
 		if pooljsc.Size != PoolingJsVmConcurrency {
-			pooljsc.Resize(PoolingJsVmConcurrency)
+			//		pooljsc.Resize(PoolingJsVmConcurrency)
 		}
 	}
 )

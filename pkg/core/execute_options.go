@@ -116,7 +116,7 @@ func (e *Engine) executeTemplateSpray(ctx context.Context, templatesList []*temp
 		}
 
 		// resize check point - nop if there are no changes
-		wp.RefreshWithConfig(e.GetWorkPoolConfig())
+		//wp.RefreshWithConfig(e.GetWorkPoolConfig())
 
 		templateType := template.Type()
 		var wg *syncutil.AdaptiveWaitGroup

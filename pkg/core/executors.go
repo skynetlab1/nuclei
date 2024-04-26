@@ -172,7 +172,7 @@ func (e *Engine) executeTemplatesOnTarget(ctx context.Context, alltemplates []*t
 		}
 
 		// resize check point - nop if there are no changes
-		wp.RefreshWithConfig(e.GetWorkPoolConfig())
+		//wp.RefreshWithConfig(e.GetWorkPoolConfig())
 
 		var sg *syncutil.AdaptiveWaitGroup
 		if tpl.Type() == types.HeadlessProtocol {
@@ -230,7 +230,7 @@ func (e *ChildExecuter) Execute(template *templates.Template, value *contextargs
 	templateType := template.Type()
 
 	// resize check point - nop if there are no changes
-	e.e.WorkPool().RefreshWithConfig(e.e.GetWorkPoolConfig())
+	//	e.e.WorkPool().RefreshWithConfig(e.e.GetWorkPoolConfig())
 
 	var wg *syncutil.AdaptiveWaitGroup
 	if templateType == types.HeadlessProtocol {
