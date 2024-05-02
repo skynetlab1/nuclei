@@ -1,0 +1,33 @@
+syntax = "proto3";
+package proto;
+
+option go_package = "github.com/projectdiscovery/nuclei/v3/internal/pdcp/agent/proto";
+
+// ScanRequest is a request for scan from the server.
+message ScanRequest {
+    // ScanID is the ID of the scan to be performed.
+    string ScanID = 1;
+    // Optimization is the optimization type to be used for the scan.
+    OptimizationType Optimization = 2;
+    // TemplateRequestCount is the number of requests in templates
+    int32 TemplateRequestCount = 3;
+    // Targets is a list of targets to be used for the scan.
+    map<string, int64> Targets = 4;
+    // PublicTemplates is a list of public templates to be used for the scan.
+    map<string, int64> PublicTemplates = 5;
+    // PrivateTemplates is a list of private templates to be used for the scan.
+    map<string, string> PrivateTemplates = 6;
+    // TemplateURLs is a list of template URLs to be used for the scan.
+    map<string, string> TemplateURLs = 7;
+    // IsRescan is a boolean indicating whether the scan is a rescan or not.
+    bool IsRescan = 8; 
+    // UserID is the ID of the user performing the scan.
+    int64 UserID = 9;
+}
+
+// OptimizationRequest is a request for optimization from the server.
+enum OptimizationType {
+    NONE = 0;
+    FAST_HTTP = 1;
+    FAST_NETWORK = 2;
+}

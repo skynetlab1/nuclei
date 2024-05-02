@@ -1,0 +1,442 @@
+openapi: 3.1.0
+info:
+  title: Nuclei Agent API
+  version: '1.0'
+  description: Nuclei Agent API for Cloud
+  summary: Nuclei Agent API for Cloud
+  contact:
+    name: Projectdiscovery
+    url: 'https://projectdiscovery.io'
+    email: contact@projectdiscovery.io
+  license:
+    name: MIT
+    identifier: MIT
+servers:
+  - url: 'http://localhost:8087' 
+paths:
+  /agents:
+    post:
+      summary: Register local agent
+      tags:
+        - agent
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - ok
+                  - id
+                properties:
+                  ok:
+                    type: boolean
+                  id:
+                    type: string
+        '500':
+          $ref: '#/components/responses/ErrorResponse'
+      operationId: post-agent-register
+      parameters:
+        - schema:
+            type: integer
+            format: int64
+          in: query
+          name: user_id
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - machine_id
+                - cpu_cores
+                - memory_gb
+                - os
+                - arch
+                - hostname
+              properties:
+                machine_id:
+                  type: string
+                cpu_cores:
+                  type: integer
+                memory_gb:
+                  type: integer
+                os:
+                  type: string
+                arch:
+                  type: string
+                hostname:
+                  type: string
+    parameters: []
+    get:
+      summary: Get local agents
+      tags:
+        - agent
+      responses:
+        '200':
+          $ref: '#/components/responses/GetAgents'
+        '500':
+          $ref: '#/components/responses/ErrorResponse'
+      operationId: get-agents
+      parameters:
+        - schema:
+            type: integer
+            format: int64
+          in: query
+          name: user_id
+          required: true
+        - in: query
+          name: offset
+          schema:
+            type: integer
+          description: The number of items to skip before starting to collect the result set
+        - in: query
+          name: limit
+          schema:
+            type: integer
+          description: The numbers of items to return
+        - in: query
+          name: status
+          schema:
+            type: string
+  '/agents/{id}':
+    parameters:
+      - schema:
+          type: string
+        name: id
+        in: path
+        required: true
+    get:
+      summary: Get local agent
+      tags:
+        - agent
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LocalAgent'
+        '500':
+          $ref: '#/components/responses/ErrorResponse'
+      operationId: get-agents-id
+      parameters:
+        - schema:
+            type: integer
+            format: int64
+          in: query
+          name: user_id
+          required: true
+    delete:
+      summary: Deregister local agent
+      tags:
+        - agent
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - ok
+                properties:
+                  ok:
+                    type: boolean
+        '500':
+          $ref: '#/components/responses/ErrorResponse'
+      operationId: delete-agents-id
+      parameters:
+        - schema:
+            type: integer
+            format: int64
+          in: query
+          name: user_id
+          required: true
+  '/agents/{id}/poll':
+    parameters:
+      - schema:
+          type: string
+        name: id
+        in: path
+        required: true
+    get:
+      summary: Poll tasks for agent
+      tags:
+        - agent
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AgentPollTask'
+        '500':
+          $ref: '#/components/responses/ErrorResponse'
+      operationId: get-agents-id-poll
+      parameters:
+        - schema:
+            type: integer
+            format: int64
+          in: query
+          name: user_id
+          required: true
+        - schema:
+            type: integer
+          in: query
+          name: count
+  '/agents/{id}/ack':
+    parameters:
+      - schema:
+          type: string
+        name: id
+        in: path
+        required: true
+    post:
+      summary: Acknowledge agent tasks
+      tags:
+        - agent
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - ok
+                properties:
+                  ok:
+                    type: boolean
+        '500':
+          $ref: '#/components/responses/ErrorResponse'
+      operationId: post-agents-id-ack
+      parameters:
+        - schema:
+            type: integer
+            format: int64
+          in: query
+          name: user_id
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: object
+                $ref: '#/components/schemas/AgentAckRequest'
+  '/agents/{id}/results':
+    parameters:
+      - schema:
+          type: string
+        name: id
+        in: path
+        required: true
+    post:
+      summary: Submit agent results
+      tags:
+        - agent
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - ok
+                properties:
+                  ok:
+                    type: boolean
+        '500':
+          $ref: '#/components/responses/ErrorResponse'
+      operationId: post-agents-id-results
+      parameters:
+        - schema:
+            type: integer
+            format: int64
+          in: query
+          name: user_id
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: string
+                format: byte
+  '/agents/{id}/ping':
+    post:
+      summary: Ping agent endpoint
+      tags:
+        - agent
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - ok
+                properties:
+                  ok:
+                    type: boolean
+        '500':
+          $ref: '#/components/responses/ErrorResponse'
+      operationId: post-agents-id-ping
+      parameters:
+        - schema:
+            type: integer
+            format: int64
+          in: query
+          name: user_id
+          required: true
+    parameters:
+      - schema:
+          type: string
+        name: id
+        in: path
+        required: true
+components:
+  schemas:
+    LocalAgent:
+      title: LocalAgent
+      type: object
+      required:
+        - id
+        - machine_id
+        - cpu_cores
+        - memory_gb
+        - os
+        - arch
+        - hostname
+        - last_ping_at
+        - status
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+        machine_id:
+          type: string
+        cpu_cores:
+          type: integer
+        memory_gb:
+          type: integer
+        os:
+          type: string
+        arch:
+          type: string
+        last_ping_at:
+          type: string
+          format: date-time
+        hostname:
+          type: string
+        status:
+          enum:
+            - active
+            - inactive
+            - idle
+        uptime:
+          type: string
+          format: duration
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    AgentPollTask:
+      title: AgentPollTask
+      type: object
+      properties:
+        id:
+          type: string
+        value:
+          type: string
+          format: byte
+        scan_id:
+          type: string
+        scan_config:
+          type: string
+        reporting_config:
+          type: string
+      required:
+        - id
+        - value
+        - scan_id
+    AgentAckRequest:
+      title: AgentAckRequest
+      type: object
+      properties:
+        id:
+          type: string
+        scan_id:
+          type: string
+      required:
+        - id
+        - scan_id
+  securitySchemes:
+    APIKey:
+      type: apiKey
+      in: header
+      name: X-API-Key
+  responses:
+    GetAgents:
+      description: Get Agents Response
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - current_page
+              - result_count
+              - total_results
+              - total_pages
+              - data
+            properties:
+              current_page:
+                type: integer
+              result_count:
+                type: integer
+              total_results:
+                type: integer
+              total_pages:
+                type: integer
+              data:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LocalAgent'
+    ErrorResponse:
+      description: Bad request error response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              kind:
+                type: string
+              param:
+                type: string
+              code:
+                type: string
+              error_id:
+                type: string
+              error:
+                type: string
+              message:
+                type: string
+              status:
+                type: integer
+            required:
+              - kind
+              - code
+              - message
+              - status
