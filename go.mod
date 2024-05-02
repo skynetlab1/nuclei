@@ -62,7 +62,6 @@ require (
 	github.com/clbanning/mxj/v2 v2.7.0
 	github.com/corpix/uarand v0.2.0
 	github.com/deepmap/oapi-codegen v1.16.2
-	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/denisenkom/go-mssqldb v0.12.3
 	github.com/ditashi/jsbeautifier-go v0.0.0-20141206144643-2520a8026a9c
 	github.com/docker/go-units v0.5.0
@@ -94,6 +93,7 @@ require (
 	github.com/projectdiscovery/gostruct v0.0.2
 	github.com/projectdiscovery/gozero v0.0.2
 	github.com/projectdiscovery/httpx v1.6.0
+	github.com/projectdiscovery/machineid v0.0.0-20240226150047-2e2c51e35983
 	github.com/projectdiscovery/mapcidr v1.1.34
 	github.com/projectdiscovery/n3iwf v0.0.0-20230523120440-b8cd232ff1f5
 	github.com/projectdiscovery/ratelimit v0.0.39
@@ -210,7 +210,6 @@ require (
 	github.com/projectdiscovery/cdncheck v1.0.9 // indirect
 	github.com/projectdiscovery/freeport v0.0.5 // indirect
 	github.com/projectdiscovery/ldapserver v1.0.2-0.20240219154113-dcc758ebc0cb // indirect
-	github.com/projectdiscovery/machineid v0.0.0-20240226150047-2e2c51e35983 // indirect
 	github.com/projectdiscovery/stringsutil v0.0.2 // indirect
 	github.com/quic-go/quic-go v0.42.0 // indirect
 	github.com/refraction-networking/utls v1.6.1 // indirect

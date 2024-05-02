@@ -19,13 +19,13 @@ import (
 	"time"
 
 	"github.com/deepmap/oapi-codegen/pkg/securityprovider"
-	"github.com/denisbrodbeck/machineid"
 	"github.com/dustin/go-humanize"
 	"github.com/klauspost/compress/zstd"
 	"github.com/mackerelio/go-osstat/memory"
 	"github.com/pkg/errors"
 	"github.com/projectdiscovery/gologger"
 	"github.com/projectdiscovery/gologger/levels"
+	"github.com/projectdiscovery/machineid"
 	"github.com/projectdiscovery/nuclei/v3/internal/pdcp/agent/client"
 	agentproto "github.com/projectdiscovery/nuclei/v3/internal/pdcp/agent/proto"
 	"github.com/projectdiscovery/nuclei/v3/pkg/catalog/config"
@@ -129,6 +129,8 @@ var (
 	ServerURL = env.GetEnvOrDefault("PDCP_API_SERVER", "https://scan-dev.api.nuclei.sh")
 	ServerKey = env.GetEnvOrDefault("PDCP_API_KEY", "")
 	isDebug   = env.GetEnvOrDefault("DEBUG", true)
+
+	userID = 28
 )
 
 // RegisterAgent registers the agent with the server.
@@ -192,7 +194,7 @@ func RegisterAgent() error {
 		}
 
 		resp, err := auroraClient.PostAgentRegisterWithResponse(context.TODO(), &client.PostAgentRegisterParams{
-			UserId: 1,
+			UserId: int64(userID),
 		}, client.PostAgentRegisterJSONRequestBody{
 			Arch:      meta.Arch,
 			CpuCores:  meta.CPU,
@@ -230,7 +232,7 @@ func RegisterAgent() error {
 
 		// Acknowledge the work
 		_, err := auroraClient.PostAgentsIdAckWithResponse(context.TODO(), *agentID, &client.PostAgentsIdAckParams{
-			UserId: 1,
+			UserId: int64(userID),
 		}, client.PostAgentsIdAckJSONRequestBody(agentAckReq))
 		if err != nil {
 			log.Printf("could not acknowledge work: %s\n", err)
@@ -251,7 +253,7 @@ func RegisterAgent() error {
 
 			// Send the results to the server
 			res, err := auroraClient.PostAgentsIdResultsWithResponse(context.TODO(), *agentID, &client.PostAgentsIdResultsParams{
-				UserId: 1,
+				UserId: int64(userID),
 			}, client.PostAgentsIdResultsJSONRequestBody(b))
 			if err != nil {
 				log.Printf("could not send results: %s\n", err)
@@ -296,7 +298,7 @@ func RegisterAgent() error {
 		case <-c:
 			fmt.Println("Shutting down agent")
 			_, err := auroraClient.DeleteAgentsIdWithResponse(context.TODO(), *agentID, &client.DeleteAgentsIdParams{
-				UserId: 1,
+				UserId: int64(userID),
 			})
 			if err != nil {
 				log.Printf("could not delete agent: %s\n", err)
@@ -349,7 +351,7 @@ func pollAndDoWork(
 		// every 30 seconds.
 		if time.Since(lastPingTimestamp) >= 30*time.Second {
 			_, err := auroraClient.PostAgentsIdPingWithResponse(context.TODO(), agentID, &client.PostAgentsIdPingParams{
-				UserId: 1,
+				UserId: int64(userID),
 			})
 			if err != nil {
 				log.Printf("could not ping agent: %s\n", err)
@@ -360,7 +362,7 @@ func pollAndDoWork(
 	}
 	// Poll the server for work
 	resp, err := auroraClient.GetAgentsIdPollWithResponse(context.TODO(), agentID, &client.GetAgentsIdPollParams{
-		UserId: 1,
+		UserId: int64(userID),
 		Count:  &count,
 	})
 	if err != nil {
