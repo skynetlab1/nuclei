@@ -17,6 +17,17 @@ import (
 	"github.com/oapi-codegen/runtime"
 )
 
+const (
+	X_API_KeyScopes = "X_API_Key.Scopes"
+)
+
+// Defines values for GetAgentsParamsStatus.
+const (
+	Active   GetAgentsParamsStatus = "active"
+	Idle     GetAgentsParamsStatus = "idle"
+	Inactive GetAgentsParamsStatus = "inactive"
+)
+
 // AgentAckRequest defines model for AgentAckRequest.
 type AgentAckRequest struct {
 	Id     string `json:"id"`
@@ -48,6 +59,34 @@ type LocalAgent struct {
 	Uptime     *string     `json:"uptime,omitempty"`
 }
 
+// ScanStatusItem defines model for ScanStatusItem.
+type ScanStatusItem struct {
+	AssetIds        *[]string               `json:"asset_ids,omitempty"`
+	CompletedAt     string                  `json:"completed_at"`
+	CreatedAt       string                  `json:"created_at"`
+	FailureReason   string                  `json:"failure_reason"`
+	IsCloud         bool                    `json:"is_cloud"`
+	IsOss           bool                    `json:"is_oss"`
+	IsRescan        *bool                   `json:"is_rescan,omitempty"`
+	Name            string                  `json:"name"`
+	Progress        int                     `json:"progress"`
+	PublicTemplates *[]string               `json:"public_templates,omitempty"`
+	ReportConfigIds *[]string               `json:"report_config_ids,omitempty"`
+	RescanCount     *int                    `json:"rescan_count,omitempty"`
+	ScanConfigIds   *[]string               `json:"scan_config_ids,omitempty"`
+	ScanId          string                  `json:"scan_id"`
+	ScanTimeElapsed string                  `json:"scan_time_elapsed"`
+	Schedule        *map[string]interface{} `json:"schedule,omitempty"`
+	Severity        *map[string]interface{} `json:"severity,omitempty"`
+	Status          string                  `json:"status"`
+	TemplateIds     *[]string               `json:"template_ids,omitempty"`
+	TemplateUrls    *[]string               `json:"template_urls,omitempty"`
+	TotalScan       int                     `json:"total_scan"`
+	TotalTarget     int                     `json:"total_target"`
+	TotalTemplate   int                     `json:"total_template"`
+	UpdatedAt       string                  `json:"updated_at"`
+}
+
 // ErrorResponse defines model for ErrorResponse.
 type ErrorResponse struct {
 	Code    string  `json:"code"`
@@ -68,17 +107,59 @@ type GetAgents struct {
 	TotalResults int          `json:"total_results"`
 }
 
+// GetScanDetailsResponse defines model for GetScanDetailsResponse.
+type GetScanDetailsResponse = ScanStatusItem
+
+// TriggerUserScanResponse defines model for TriggerUserScanResponse.
+type TriggerUserScanResponse struct {
+	Id      *string `json:"id,omitempty"`
+	Message string  `json:"message"`
+}
+
+// TriggerUserScanRequest defines model for TriggerUserScanRequest.
+type TriggerUserScanRequest struct {
+	AlertingConfigIds         *[]string                 `json:"alerting_config_ids,omitempty"`
+	All                       *bool                     `json:"all,omitempty"`
+	Assets                    *[]string                 `json:"assets,omitempty"`
+	DisableGlobalAlertConfig  *bool                     `json:"disable_global_alert_config,omitempty"`
+	DisableGlobalReportConfig *bool                     `json:"disable_global_report_config,omitempty"`
+	DisableGlobalScanConfig   *bool                     `json:"disable_global_scan_config,omitempty"`
+	EarlyTemplates            *[]string                 `json:"early_templates,omitempty"`
+	EnumerationIds            *[]map[string]interface{} `json:"enumeration_ids,omitempty"`
+	ExcludeTargets            *[]string                 `json:"exclude_targets,omitempty"`
+	Name                      *string                   `json:"name,omitempty"`
+	PrivateTemplates          *[]map[string]interface{} `json:"private_templates,omitempty"`
+	Recommended               *bool                     `json:"recommended,omitempty"`
+	ReportingConfigIds        *[]string                 `json:"reporting_config_ids,omitempty"`
+	ScanConfigIds             *[]string                 `json:"scan_config_ids,omitempty"`
+	ScheduleOnly              *bool                     `json:"schedule_only,omitempty"`
+	Targets                   *[]string                 `json:"targets,omitempty"`
+	Templates                 *[]string                 `json:"templates,omitempty"`
+}
+
+// PostAgentsIdAckJSONBody defines parameters for PostAgentsIdAck.
+type PostAgentsIdAckJSONBody = []AgentAckRequest
+
+// GetAgentsIdPollParams defines parameters for GetAgentsIdPoll.
+type GetAgentsIdPollParams struct {
+	Count *int `form:"count,omitempty" json:"count,omitempty"`
+}
+
+// PostAgentsIdResultsJSONBody defines parameters for PostAgentsIdResults.
+type PostAgentsIdResultsJSONBody = [][]byte
+
 // GetAgentsParams defines parameters for GetAgents.
 type GetAgentsParams struct {
-	UserId int64 `form:"user_id" json:"user_id"`
-
 	// Offset The number of items to skip before starting to collect the result set
 	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
 
 	// Limit The numbers of items to return
-	Limit  *int    `form:"limit,omitempty" json:"limit,omitempty"`
-	Status *string `form:"status,omitempty" json:"status,omitempty"`
+	Limit  *int                   `form:"limit,omitempty" json:"limit,omitempty"`
+	Status *GetAgentsParamsStatus `form:"status,omitempty" json:"status,omitempty"`
 }
+
+// GetAgentsParamsStatus defines parameters for GetAgents.
+type GetAgentsParamsStatus string
 
 // PostAgentRegisterJSONBody defines parameters for PostAgentRegister.
 type PostAgentRegisterJSONBody struct {
@@ -90,56 +171,38 @@ type PostAgentRegisterJSONBody struct {
 	Os        string `json:"os"`
 }
 
-// PostAgentRegisterParams defines parameters for PostAgentRegister.
-type PostAgentRegisterParams struct {
-	UserId int64 `form:"user_id" json:"user_id"`
+// PostV1ScansJSONBody defines parameters for PostV1Scans.
+type PostV1ScansJSONBody struct {
+	AlertingConfigIds         *[]string                 `json:"alerting_config_ids,omitempty"`
+	All                       *bool                     `json:"all,omitempty"`
+	Assets                    *[]string                 `json:"assets,omitempty"`
+	DisableGlobalAlertConfig  *bool                     `json:"disable_global_alert_config,omitempty"`
+	DisableGlobalReportConfig *bool                     `json:"disable_global_report_config,omitempty"`
+	DisableGlobalScanConfig   *bool                     `json:"disable_global_scan_config,omitempty"`
+	EarlyTemplates            *[]string                 `json:"early_templates,omitempty"`
+	EnumerationIds            *[]map[string]interface{} `json:"enumeration_ids,omitempty"`
+	ExcludeTargets            *[]string                 `json:"exclude_targets,omitempty"`
+	Name                      *string                   `json:"name,omitempty"`
+	PrivateTemplates          *[]map[string]interface{} `json:"private_templates,omitempty"`
+	Recommended               *bool                     `json:"recommended,omitempty"`
+	ReportingConfigIds        *[]string                 `json:"reporting_config_ids,omitempty"`
+	ScanConfigIds             *[]string                 `json:"scan_config_ids,omitempty"`
+	ScheduleOnly              *bool                     `json:"schedule_only,omitempty"`
+	Targets                   *[]string                 `json:"targets,omitempty"`
+	Templates                 *[]string                 `json:"templates,omitempty"`
 }
-
-// DeleteAgentsIdParams defines parameters for DeleteAgentsId.
-type DeleteAgentsIdParams struct {
-	UserId int64 `form:"user_id" json:"user_id"`
-}
-
-// GetAgentsIdParams defines parameters for GetAgentsId.
-type GetAgentsIdParams struct {
-	UserId int64 `form:"user_id" json:"user_id"`
-}
-
-// PostAgentsIdAckJSONBody defines parameters for PostAgentsIdAck.
-type PostAgentsIdAckJSONBody = []AgentAckRequest
-
-// PostAgentsIdAckParams defines parameters for PostAgentsIdAck.
-type PostAgentsIdAckParams struct {
-	UserId int64 `form:"user_id" json:"user_id"`
-}
-
-// PostAgentsIdPingParams defines parameters for PostAgentsIdPing.
-type PostAgentsIdPingParams struct {
-	UserId int64 `form:"user_id" json:"user_id"`
-}
-
-// GetAgentsIdPollParams defines parameters for GetAgentsIdPoll.
-type GetAgentsIdPollParams struct {
-	UserId int64 `form:"user_id" json:"user_id"`
-	Count  *int  `form:"count,omitempty" json:"count,omitempty"`
-}
-
-// PostAgentsIdResultsJSONBody defines parameters for PostAgentsIdResults.
-type PostAgentsIdResultsJSONBody = [][]byte
-
-// PostAgentsIdResultsParams defines parameters for PostAgentsIdResults.
-type PostAgentsIdResultsParams struct {
-	UserId int64 `form:"user_id" json:"user_id"`
-}
-
-// PostAgentRegisterJSONRequestBody defines body for PostAgentRegister for application/json ContentType.
-type PostAgentRegisterJSONRequestBody PostAgentRegisterJSONBody
 
 // PostAgentsIdAckJSONRequestBody defines body for PostAgentsIdAck for application/json ContentType.
 type PostAgentsIdAckJSONRequestBody = PostAgentsIdAckJSONBody
 
 // PostAgentsIdResultsJSONRequestBody defines body for PostAgentsIdResults for application/json ContentType.
 type PostAgentsIdResultsJSONRequestBody = PostAgentsIdResultsJSONBody
+
+// PostAgentRegisterJSONRequestBody defines body for PostAgentRegister for application/json ContentType.
+type PostAgentRegisterJSONRequestBody PostAgentRegisterJSONBody
+
+// PostV1ScansJSONRequestBody defines body for PostV1Scans for application/json ContentType.
+type PostV1ScansJSONRequestBody PostV1ScansJSONBody
 
 // RequestEditorFn  is the function signature for the RequestEditor callback function
 type RequestEditorFn func(ctx context.Context, req *http.Request) error
@@ -214,39 +277,47 @@ func WithRequestEditorFn(fn RequestEditorFn) ClientOption {
 
 // The interface specification for the client above.
 type ClientInterface interface {
-	// GetAgents request
-	GetAgents(ctx context.Context, params *GetAgentsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// PostAgentRegisterWithBody request with any body
-	PostAgentRegisterWithBody(ctx context.Context, params *PostAgentRegisterParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	PostAgentRegister(ctx context.Context, params *PostAgentRegisterParams, body PostAgentRegisterJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
-
 	// DeleteAgentsId request
-	DeleteAgentsId(ctx context.Context, id string, params *DeleteAgentsIdParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	DeleteAgentsId(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetAgentsId request
-	GetAgentsId(ctx context.Context, id string, params *GetAgentsIdParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	GetAgentsId(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PostAgentsIdAckWithBody request with any body
-	PostAgentsIdAckWithBody(ctx context.Context, id string, params *PostAgentsIdAckParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PostAgentsIdAckWithBody(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PostAgentsIdAck(ctx context.Context, id string, params *PostAgentsIdAckParams, body PostAgentsIdAckJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PostAgentsIdAck(ctx context.Context, id string, body PostAgentsIdAckJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PostAgentsIdPing request
-	PostAgentsIdPing(ctx context.Context, id string, params *PostAgentsIdPingParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PostAgentsIdPing(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetAgentsIdPoll request
 	GetAgentsIdPoll(ctx context.Context, id string, params *GetAgentsIdPollParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PostAgentsIdResultsWithBody request with any body
-	PostAgentsIdResultsWithBody(ctx context.Context, id string, params *PostAgentsIdResultsParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PostAgentsIdResultsWithBody(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PostAgentsIdResults(ctx context.Context, id string, params *PostAgentsIdResultsParams, body PostAgentsIdResultsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PostAgentsIdResults(ctx context.Context, id string, body PostAgentsIdResultsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetAgents request
+	GetAgents(ctx context.Context, params *GetAgentsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostAgentRegisterWithBody request with any body
+	PostAgentRegisterWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostAgentRegister(ctx context.Context, body PostAgentRegisterJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostV1ScansWithBody request with any body
+	PostV1ScansWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostV1Scans(ctx context.Context, body PostV1ScansJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetV1ScansScanId request
+	GetV1ScansScanId(ctx context.Context, scanId string, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
-func (c *Client) GetAgents(ctx context.Context, params *GetAgentsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetAgentsRequest(c.Server, params)
+func (c *Client) DeleteAgentsId(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteAgentsIdRequest(c.Server, id)
 	if err != nil {
 		return nil, err
 	}
@@ -257,8 +328,8 @@ func (c *Client) GetAgents(ctx context.Context, params *GetAgentsParams, reqEdit
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostAgentRegisterWithBody(ctx context.Context, params *PostAgentRegisterParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostAgentRegisterRequestWithBody(c.Server, params, contentType, body)
+func (c *Client) GetAgentsId(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetAgentsIdRequest(c.Server, id)
 	if err != nil {
 		return nil, err
 	}
@@ -269,8 +340,8 @@ func (c *Client) PostAgentRegisterWithBody(ctx context.Context, params *PostAgen
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostAgentRegister(ctx context.Context, params *PostAgentRegisterParams, body PostAgentRegisterJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostAgentRegisterRequest(c.Server, params, body)
+func (c *Client) PostAgentsIdAckWithBody(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostAgentsIdAckRequestWithBody(c.Server, id, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -281,8 +352,8 @@ func (c *Client) PostAgentRegister(ctx context.Context, params *PostAgentRegiste
 	return c.Client.Do(req)
 }
 
-func (c *Client) DeleteAgentsId(ctx context.Context, id string, params *DeleteAgentsIdParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewDeleteAgentsIdRequest(c.Server, id, params)
+func (c *Client) PostAgentsIdAck(ctx context.Context, id string, body PostAgentsIdAckJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostAgentsIdAckRequest(c.Server, id, body)
 	if err != nil {
 		return nil, err
 	}
@@ -293,44 +364,8 @@ func (c *Client) DeleteAgentsId(ctx context.Context, id string, params *DeleteAg
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetAgentsId(ctx context.Context, id string, params *GetAgentsIdParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetAgentsIdRequest(c.Server, id, params)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) PostAgentsIdAckWithBody(ctx context.Context, id string, params *PostAgentsIdAckParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostAgentsIdAckRequestWithBody(c.Server, id, params, contentType, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) PostAgentsIdAck(ctx context.Context, id string, params *PostAgentsIdAckParams, body PostAgentsIdAckJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostAgentsIdAckRequest(c.Server, id, params, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) PostAgentsIdPing(ctx context.Context, id string, params *PostAgentsIdPingParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostAgentsIdPingRequest(c.Server, id, params)
+func (c *Client) PostAgentsIdPing(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostAgentsIdPingRequest(c.Server, id)
 	if err != nil {
 		return nil, err
 	}
@@ -353,8 +388,8 @@ func (c *Client) GetAgentsIdPoll(ctx context.Context, id string, params *GetAgen
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostAgentsIdResultsWithBody(ctx context.Context, id string, params *PostAgentsIdResultsParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostAgentsIdResultsRequestWithBody(c.Server, id, params, contentType, body)
+func (c *Client) PostAgentsIdResultsWithBody(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostAgentsIdResultsRequestWithBody(c.Server, id, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -365,8 +400,8 @@ func (c *Client) PostAgentsIdResultsWithBody(ctx context.Context, id string, par
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostAgentsIdResults(ctx context.Context, id string, params *PostAgentsIdResultsParams, body PostAgentsIdResultsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostAgentsIdResultsRequest(c.Server, id, params, body)
+func (c *Client) PostAgentsIdResults(ctx context.Context, id string, body PostAgentsIdResultsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostAgentsIdResultsRequest(c.Server, id, body)
 	if err != nil {
 		return nil, err
 	}
@@ -377,16 +412,244 @@ func (c *Client) PostAgentsIdResults(ctx context.Context, id string, params *Pos
 	return c.Client.Do(req)
 }
 
-// NewGetAgentsRequest generates requests for GetAgents
-func NewGetAgentsRequest(server string, params *GetAgentsParams) (*http.Request, error) {
+func (c *Client) GetAgents(ctx context.Context, params *GetAgentsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetAgentsRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostAgentRegisterWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostAgentRegisterRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostAgentRegister(ctx context.Context, body PostAgentRegisterJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostAgentRegisterRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostV1ScansWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostV1ScansRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostV1Scans(ctx context.Context, body PostV1ScansJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostV1ScansRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetV1ScansScanId(ctx context.Context, scanId string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetV1ScansScanIdRequest(c.Server, scanId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// NewDeleteAgentsIdRequest generates requests for DeleteAgentsId
+func NewDeleteAgentsIdRequest(server string, id string) (*http.Request, error) {
 	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	if err != nil {
+		return nil, err
+	}
 
 	serverURL, err := url.Parse(server)
 	if err != nil {
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/agents")
+	operationPath := fmt.Sprintf("/agents/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetAgentsIdRequest generates requests for GetAgentsId
+func NewGetAgentsIdRequest(server string, id string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/agents/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPostAgentsIdAckRequest calls the generic PostAgentsIdAck builder with application/json body
+func NewPostAgentsIdAckRequest(server string, id string, body PostAgentsIdAckJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostAgentsIdAckRequestWithBody(server, id, "application/json", bodyReader)
+}
+
+// NewPostAgentsIdAckRequestWithBody generates requests for PostAgentsIdAck with any type of body
+func NewPostAgentsIdAckRequestWithBody(server string, id string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/agents/%s/ack", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewPostAgentsIdPingRequest generates requests for PostAgentsIdPing
+func NewPostAgentsIdPingRequest(server string, id string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/agents/%s/ping", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetAgentsIdPollRequest generates requests for GetAgentsIdPoll
+func NewGetAgentsIdPollRequest(server string, id string, params *GetAgentsIdPollParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/agents/%s/poll", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -399,17 +662,101 @@ func NewGetAgentsRequest(server string, params *GetAgentsParams) (*http.Request,
 	if params != nil {
 		queryValues := queryURL.Query()
 
-		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "user_id", runtime.ParamLocationQuery, params.UserId); err != nil {
-			return nil, err
-		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-			return nil, err
-		} else {
-			for k, v := range parsed {
-				for _, v2 := range v {
-					queryValues.Add(k, v2)
+		if params.Count != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "count", runtime.ParamLocationQuery, *params.Count); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
 				}
 			}
+
 		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPostAgentsIdResultsRequest calls the generic PostAgentsIdResults builder with application/json body
+func NewPostAgentsIdResultsRequest(server string, id string, body PostAgentsIdResultsJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostAgentsIdResultsRequestWithBody(server, id, "application/json", bodyReader)
+}
+
+// NewPostAgentsIdResultsRequestWithBody generates requests for PostAgentsIdResults with any type of body
+func NewPostAgentsIdResultsRequestWithBody(server string, id string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/agents/%s/results", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewGetAgentsRequest generates requests for GetAgents
+func NewGetAgentsRequest(server string, params *GetAgentsParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/agents")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
 
 		if params.Offset != nil {
 
@@ -471,18 +818,18 @@ func NewGetAgentsRequest(server string, params *GetAgentsParams) (*http.Request,
 }
 
 // NewPostAgentRegisterRequest calls the generic PostAgentRegister builder with application/json body
-func NewPostAgentRegisterRequest(server string, params *PostAgentRegisterParams, body PostAgentRegisterJSONRequestBody) (*http.Request, error) {
+func NewPostAgentRegisterRequest(server string, body PostAgentRegisterJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewPostAgentRegisterRequestWithBody(server, params, "application/json", bodyReader)
+	return NewPostAgentRegisterRequestWithBody(server, "application/json", bodyReader)
 }
 
 // NewPostAgentRegisterRequestWithBody generates requests for PostAgentRegister with any type of body
-func NewPostAgentRegisterRequestWithBody(server string, params *PostAgentRegisterParams, contentType string, body io.Reader) (*http.Request, error) {
+func NewPostAgentRegisterRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -490,7 +837,7 @@ func NewPostAgentRegisterRequestWithBody(server string, params *PostAgentRegiste
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/agents")
+	operationPath := fmt.Sprintf("/v1/agents")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -498,24 +845,6 @@ func NewPostAgentRegisterRequestWithBody(server string, params *PostAgentRegiste
 	queryURL, err := serverURL.Parse(operationPath)
 	if err != nil {
 		return nil, err
-	}
-
-	if params != nil {
-		queryValues := queryURL.Query()
-
-		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "user_id", runtime.ParamLocationQuery, params.UserId); err != nil {
-			return nil, err
-		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-			return nil, err
-		} else {
-			for k, v := range parsed {
-				for _, v2 := range v {
-					queryValues.Add(k, v2)
-				}
-			}
-		}
-
-		queryURL.RawQuery = queryValues.Encode()
 	}
 
 	req, err := http.NewRequest("POST", queryURL.String(), body)
@@ -528,138 +857,27 @@ func NewPostAgentRegisterRequestWithBody(server string, params *PostAgentRegiste
 	return req, nil
 }
 
-// NewDeleteAgentsIdRequest generates requests for DeleteAgentsId
-func NewDeleteAgentsIdRequest(server string, id string, params *DeleteAgentsIdParams) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/agents/%s", pathParam0)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	if params != nil {
-		queryValues := queryURL.Query()
-
-		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "user_id", runtime.ParamLocationQuery, params.UserId); err != nil {
-			return nil, err
-		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-			return nil, err
-		} else {
-			for k, v := range parsed {
-				for _, v2 := range v {
-					queryValues.Add(k, v2)
-				}
-			}
-		}
-
-		queryURL.RawQuery = queryValues.Encode()
-	}
-
-	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
-// NewGetAgentsIdRequest generates requests for GetAgentsId
-func NewGetAgentsIdRequest(server string, id string, params *GetAgentsIdParams) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/agents/%s", pathParam0)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	if params != nil {
-		queryValues := queryURL.Query()
-
-		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "user_id", runtime.ParamLocationQuery, params.UserId); err != nil {
-			return nil, err
-		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-			return nil, err
-		} else {
-			for k, v := range parsed {
-				for _, v2 := range v {
-					queryValues.Add(k, v2)
-				}
-			}
-		}
-
-		queryURL.RawQuery = queryValues.Encode()
-	}
-
-	req, err := http.NewRequest("GET", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
-// NewPostAgentsIdAckRequest calls the generic PostAgentsIdAck builder with application/json body
-func NewPostAgentsIdAckRequest(server string, id string, params *PostAgentsIdAckParams, body PostAgentsIdAckJSONRequestBody) (*http.Request, error) {
+// NewPostV1ScansRequest calls the generic PostV1Scans builder with application/json body
+func NewPostV1ScansRequest(server string, body PostV1ScansJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewPostAgentsIdAckRequestWithBody(server, id, params, "application/json", bodyReader)
+	return NewPostV1ScansRequestWithBody(server, "application/json", bodyReader)
 }
 
-// NewPostAgentsIdAckRequestWithBody generates requests for PostAgentsIdAck with any type of body
-func NewPostAgentsIdAckRequestWithBody(server string, id string, params *PostAgentsIdAckParams, contentType string, body io.Reader) (*http.Request, error) {
+// NewPostV1ScansRequestWithBody generates requests for PostV1Scans with any type of body
+func NewPostV1ScansRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
-	if err != nil {
-		return nil, err
-	}
 
 	serverURL, err := url.Parse(server)
 	if err != nil {
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/agents/%s/ack", pathParam0)
+	operationPath := fmt.Sprintf("/v1/scans")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -667,24 +885,6 @@ func NewPostAgentsIdAckRequestWithBody(server string, id string, params *PostAge
 	queryURL, err := serverURL.Parse(operationPath)
 	if err != nil {
 		return nil, err
-	}
-
-	if params != nil {
-		queryValues := queryURL.Query()
-
-		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "user_id", runtime.ParamLocationQuery, params.UserId); err != nil {
-			return nil, err
-		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-			return nil, err
-		} else {
-			for k, v := range parsed {
-				for _, v2 := range v {
-					queryValues.Add(k, v2)
-				}
-			}
-		}
-
-		queryURL.RawQuery = queryValues.Encode()
 	}
 
 	req, err := http.NewRequest("POST", queryURL.String(), body)
@@ -697,13 +897,13 @@ func NewPostAgentsIdAckRequestWithBody(server string, id string, params *PostAge
 	return req, nil
 }
 
-// NewPostAgentsIdPingRequest generates requests for PostAgentsIdPing
-func NewPostAgentsIdPingRequest(server string, id string, params *PostAgentsIdPingParams) (*http.Request, error) {
+// NewGetV1ScansScanIdRequest generates requests for GetV1ScansScanId
+func NewGetV1ScansScanIdRequest(server string, scanId string) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
 
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "scan_id", runtime.ParamLocationPath, scanId)
 	if err != nil {
 		return nil, err
 	}
@@ -713,7 +913,7 @@ func NewPostAgentsIdPingRequest(server string, id string, params *PostAgentsIdPi
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/agents/%s/ping", pathParam0)
+	operationPath := fmt.Sprintf("/v1/scans/%s", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -721,163 +921,12 @@ func NewPostAgentsIdPingRequest(server string, id string, params *PostAgentsIdPi
 	queryURL, err := serverURL.Parse(operationPath)
 	if err != nil {
 		return nil, err
-	}
-
-	if params != nil {
-		queryValues := queryURL.Query()
-
-		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "user_id", runtime.ParamLocationQuery, params.UserId); err != nil {
-			return nil, err
-		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-			return nil, err
-		} else {
-			for k, v := range parsed {
-				for _, v2 := range v {
-					queryValues.Add(k, v2)
-				}
-			}
-		}
-
-		queryURL.RawQuery = queryValues.Encode()
-	}
-
-	req, err := http.NewRequest("POST", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
-// NewGetAgentsIdPollRequest generates requests for GetAgentsIdPoll
-func NewGetAgentsIdPollRequest(server string, id string, params *GetAgentsIdPollParams) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/agents/%s/poll", pathParam0)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	if params != nil {
-		queryValues := queryURL.Query()
-
-		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "user_id", runtime.ParamLocationQuery, params.UserId); err != nil {
-			return nil, err
-		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-			return nil, err
-		} else {
-			for k, v := range parsed {
-				for _, v2 := range v {
-					queryValues.Add(k, v2)
-				}
-			}
-		}
-
-		if params.Count != nil {
-
-			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "count", runtime.ParamLocationQuery, *params.Count); err != nil {
-				return nil, err
-			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-				return nil, err
-			} else {
-				for k, v := range parsed {
-					for _, v2 := range v {
-						queryValues.Add(k, v2)
-					}
-				}
-			}
-
-		}
-
-		queryURL.RawQuery = queryValues.Encode()
 	}
 
 	req, err := http.NewRequest("GET", queryURL.String(), nil)
 	if err != nil {
 		return nil, err
 	}
-
-	return req, nil
-}
-
-// NewPostAgentsIdResultsRequest calls the generic PostAgentsIdResults builder with application/json body
-func NewPostAgentsIdResultsRequest(server string, id string, params *PostAgentsIdResultsParams, body PostAgentsIdResultsJSONRequestBody) (*http.Request, error) {
-	var bodyReader io.Reader
-	buf, err := json.Marshal(body)
-	if err != nil {
-		return nil, err
-	}
-	bodyReader = bytes.NewReader(buf)
-	return NewPostAgentsIdResultsRequestWithBody(server, id, params, "application/json", bodyReader)
-}
-
-// NewPostAgentsIdResultsRequestWithBody generates requests for PostAgentsIdResults with any type of body
-func NewPostAgentsIdResultsRequestWithBody(server string, id string, params *PostAgentsIdResultsParams, contentType string, body io.Reader) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/agents/%s/results", pathParam0)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	if params != nil {
-		queryValues := queryURL.Query()
-
-		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "user_id", runtime.ParamLocationQuery, params.UserId); err != nil {
-			return nil, err
-		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-			return nil, err
-		} else {
-			for k, v := range parsed {
-				for _, v2 := range v {
-					queryValues.Add(k, v2)
-				}
-			}
-		}
-
-		queryURL.RawQuery = queryValues.Encode()
-	}
-
-	req, err := http.NewRequest("POST", queryURL.String(), body)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Add("Content-Type", contentType)
 
 	return req, nil
 }
@@ -925,42 +974,217 @@ func WithBaseURL(baseURL string) ClientOption {
 
 // ClientWithResponsesInterface is the interface specification for the client with responses above.
 type ClientWithResponsesInterface interface {
-	// GetAgentsWithResponse request
-	GetAgentsWithResponse(ctx context.Context, params *GetAgentsParams, reqEditors ...RequestEditorFn) (*GetAgentsResponse, error)
-
-	// PostAgentRegisterWithBodyWithResponse request with any body
-	PostAgentRegisterWithBodyWithResponse(ctx context.Context, params *PostAgentRegisterParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostAgentRegisterResponse, error)
-
-	PostAgentRegisterWithResponse(ctx context.Context, params *PostAgentRegisterParams, body PostAgentRegisterJSONRequestBody, reqEditors ...RequestEditorFn) (*PostAgentRegisterResponse, error)
-
 	// DeleteAgentsIdWithResponse request
-	DeleteAgentsIdWithResponse(ctx context.Context, id string, params *DeleteAgentsIdParams, reqEditors ...RequestEditorFn) (*DeleteAgentsIdResponse, error)
+	DeleteAgentsIdWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*DeleteAgentsIdResponse, error)
 
 	// GetAgentsIdWithResponse request
-	GetAgentsIdWithResponse(ctx context.Context, id string, params *GetAgentsIdParams, reqEditors ...RequestEditorFn) (*GetAgentsIdResponse, error)
+	GetAgentsIdWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*GetAgentsIdResponse, error)
 
 	// PostAgentsIdAckWithBodyWithResponse request with any body
-	PostAgentsIdAckWithBodyWithResponse(ctx context.Context, id string, params *PostAgentsIdAckParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostAgentsIdAckResponse, error)
+	PostAgentsIdAckWithBodyWithResponse(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostAgentsIdAckResponse, error)
 
-	PostAgentsIdAckWithResponse(ctx context.Context, id string, params *PostAgentsIdAckParams, body PostAgentsIdAckJSONRequestBody, reqEditors ...RequestEditorFn) (*PostAgentsIdAckResponse, error)
+	PostAgentsIdAckWithResponse(ctx context.Context, id string, body PostAgentsIdAckJSONRequestBody, reqEditors ...RequestEditorFn) (*PostAgentsIdAckResponse, error)
 
 	// PostAgentsIdPingWithResponse request
-	PostAgentsIdPingWithResponse(ctx context.Context, id string, params *PostAgentsIdPingParams, reqEditors ...RequestEditorFn) (*PostAgentsIdPingResponse, error)
+	PostAgentsIdPingWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*PostAgentsIdPingResponse, error)
 
 	// GetAgentsIdPollWithResponse request
 	GetAgentsIdPollWithResponse(ctx context.Context, id string, params *GetAgentsIdPollParams, reqEditors ...RequestEditorFn) (*GetAgentsIdPollResponse, error)
 
 	// PostAgentsIdResultsWithBodyWithResponse request with any body
-	PostAgentsIdResultsWithBodyWithResponse(ctx context.Context, id string, params *PostAgentsIdResultsParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostAgentsIdResultsResponse, error)
+	PostAgentsIdResultsWithBodyWithResponse(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostAgentsIdResultsResponse, error)
 
-	PostAgentsIdResultsWithResponse(ctx context.Context, id string, params *PostAgentsIdResultsParams, body PostAgentsIdResultsJSONRequestBody, reqEditors ...RequestEditorFn) (*PostAgentsIdResultsResponse, error)
+	PostAgentsIdResultsWithResponse(ctx context.Context, id string, body PostAgentsIdResultsJSONRequestBody, reqEditors ...RequestEditorFn) (*PostAgentsIdResultsResponse, error)
+
+	// GetAgentsWithResponse request
+	GetAgentsWithResponse(ctx context.Context, params *GetAgentsParams, reqEditors ...RequestEditorFn) (*GetAgentsResponse, error)
+
+	// PostAgentRegisterWithBodyWithResponse request with any body
+	PostAgentRegisterWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostAgentRegisterResponse, error)
+
+	PostAgentRegisterWithResponse(ctx context.Context, body PostAgentRegisterJSONRequestBody, reqEditors ...RequestEditorFn) (*PostAgentRegisterResponse, error)
+
+	// PostV1ScansWithBodyWithResponse request with any body
+	PostV1ScansWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostV1ScansResponse, error)
+
+	PostV1ScansWithResponse(ctx context.Context, body PostV1ScansJSONRequestBody, reqEditors ...RequestEditorFn) (*PostV1ScansResponse, error)
+
+	// GetV1ScansScanIdWithResponse request
+	GetV1ScansScanIdWithResponse(ctx context.Context, scanId string, reqEditors ...RequestEditorFn) (*GetV1ScansScanIdResponse, error)
+}
+
+type DeleteAgentsIdResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		Ok bool `json:"ok"`
+	}
+	JSON400     *ErrorResponse
+	JSON401     *ErrorResponse
+	JSON500     *ErrorResponse
+	JSONDefault *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteAgentsIdResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteAgentsIdResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetAgentsIdResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *LocalAgent
+	JSON400      *ErrorResponse
+	JSON401      *ErrorResponse
+	JSON500      *ErrorResponse
+	JSONDefault  *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r GetAgentsIdResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetAgentsIdResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PostAgentsIdAckResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		Ok bool `json:"ok"`
+	}
+	JSON400     *ErrorResponse
+	JSON401     *ErrorResponse
+	JSON500     *ErrorResponse
+	JSONDefault *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r PostAgentsIdAckResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostAgentsIdAckResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PostAgentsIdPingResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		Ok bool `json:"ok"`
+	}
+	JSON400     *ErrorResponse
+	JSON401     *ErrorResponse
+	JSON500     *ErrorResponse
+	JSONDefault *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r PostAgentsIdPingResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostAgentsIdPingResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetAgentsIdPollResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *[]AgentPollTask
+	JSON400      *ErrorResponse
+	JSON401      *ErrorResponse
+	JSON500      *ErrorResponse
+	JSONDefault  *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r GetAgentsIdPollResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetAgentsIdPollResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PostAgentsIdResultsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		Ok bool `json:"ok"`
+	}
+	JSON400     *ErrorResponse
+	JSON401     *ErrorResponse
+	JSON500     *ErrorResponse
+	JSONDefault *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r PostAgentsIdResultsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostAgentsIdResultsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
 }
 
 type GetAgentsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *GetAgents
+	JSON400      *ErrorResponse
+	JSON401      *ErrorResponse
 	JSON500      *ErrorResponse
+	JSONDefault  *ErrorResponse
 }
 
 // Status returns HTTPResponse.Status
@@ -986,7 +1210,10 @@ type PostAgentRegisterResponse struct {
 		Id string `json:"id"`
 		Ok bool   `json:"ok"`
 	}
-	JSON500 *ErrorResponse
+	JSON400     *ErrorResponse
+	JSON401     *ErrorResponse
+	JSON500     *ErrorResponse
+	JSONDefault *ErrorResponse
 }
 
 // Status returns HTTPResponse.Status
@@ -1005,40 +1232,18 @@ func (r PostAgentRegisterResponse) StatusCode() int {
 	return 0
 }
 
-type DeleteAgentsIdResponse struct {
+type PostV1ScansResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *struct {
-		Ok bool `json:"ok"`
-	}
-	JSON500 *ErrorResponse
-}
-
-// Status returns HTTPResponse.Status
-func (r DeleteAgentsIdResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r DeleteAgentsIdResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type GetAgentsIdResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *LocalAgent
+	JSON200      *TriggerUserScanResponse
+	JSON400      *ErrorResponse
+	JSON401      *ErrorResponse
 	JSON500      *ErrorResponse
+	JSONDefault  *ErrorResponse
 }
 
 // Status returns HTTPResponse.Status
-func (r GetAgentsIdResponse) Status() string {
+func (r PostV1ScansResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -1046,72 +1251,27 @@ func (r GetAgentsIdResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetAgentsIdResponse) StatusCode() int {
+func (r PostV1ScansResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
 	return 0
 }
 
-type PostAgentsIdAckResponse struct {
+type GetV1ScansScanIdResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *struct {
-		Ok bool `json:"ok"`
-	}
-	JSON500 *ErrorResponse
-}
-
-// Status returns HTTPResponse.Status
-func (r PostAgentsIdAckResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r PostAgentsIdAckResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type PostAgentsIdPingResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *struct {
-		Ok bool `json:"ok"`
-	}
-	JSON500 *ErrorResponse
-}
-
-// Status returns HTTPResponse.Status
-func (r PostAgentsIdPingResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r PostAgentsIdPingResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type GetAgentsIdPollResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *[]AgentPollTask
+	JSON200      *GetScanDetailsResponse
+	JSON400      *ErrorResponse
+	JSON401      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON499      *ErrorResponse
 	JSON500      *ErrorResponse
+	JSONDefault  *ErrorResponse
 }
 
 // Status returns HTTPResponse.Status
-func (r GetAgentsIdPollResponse) Status() string {
+func (r GetV1ScansScanIdResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -1119,67 +1279,16 @@ func (r GetAgentsIdPollResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetAgentsIdPollResponse) StatusCode() int {
+func (r GetV1ScansScanIdResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
 	return 0
-}
-
-type PostAgentsIdResultsResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *struct {
-		Ok bool `json:"ok"`
-	}
-	JSON500 *ErrorResponse
-}
-
-// Status returns HTTPResponse.Status
-func (r PostAgentsIdResultsResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r PostAgentsIdResultsResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-// GetAgentsWithResponse request returning *GetAgentsResponse
-func (c *ClientWithResponses) GetAgentsWithResponse(ctx context.Context, params *GetAgentsParams, reqEditors ...RequestEditorFn) (*GetAgentsResponse, error) {
-	rsp, err := c.GetAgents(ctx, params, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseGetAgentsResponse(rsp)
-}
-
-// PostAgentRegisterWithBodyWithResponse request with arbitrary body returning *PostAgentRegisterResponse
-func (c *ClientWithResponses) PostAgentRegisterWithBodyWithResponse(ctx context.Context, params *PostAgentRegisterParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostAgentRegisterResponse, error) {
-	rsp, err := c.PostAgentRegisterWithBody(ctx, params, contentType, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParsePostAgentRegisterResponse(rsp)
-}
-
-func (c *ClientWithResponses) PostAgentRegisterWithResponse(ctx context.Context, params *PostAgentRegisterParams, body PostAgentRegisterJSONRequestBody, reqEditors ...RequestEditorFn) (*PostAgentRegisterResponse, error) {
-	rsp, err := c.PostAgentRegister(ctx, params, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParsePostAgentRegisterResponse(rsp)
 }
 
 // DeleteAgentsIdWithResponse request returning *DeleteAgentsIdResponse
-func (c *ClientWithResponses) DeleteAgentsIdWithResponse(ctx context.Context, id string, params *DeleteAgentsIdParams, reqEditors ...RequestEditorFn) (*DeleteAgentsIdResponse, error) {
-	rsp, err := c.DeleteAgentsId(ctx, id, params, reqEditors...)
+func (c *ClientWithResponses) DeleteAgentsIdWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*DeleteAgentsIdResponse, error) {
+	rsp, err := c.DeleteAgentsId(ctx, id, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
@@ -1187,8 +1296,8 @@ func (c *ClientWithResponses) DeleteAgentsIdWithResponse(ctx context.Context, id
 }
 
 // GetAgentsIdWithResponse request returning *GetAgentsIdResponse
-func (c *ClientWithResponses) GetAgentsIdWithResponse(ctx context.Context, id string, params *GetAgentsIdParams, reqEditors ...RequestEditorFn) (*GetAgentsIdResponse, error) {
-	rsp, err := c.GetAgentsId(ctx, id, params, reqEditors...)
+func (c *ClientWithResponses) GetAgentsIdWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*GetAgentsIdResponse, error) {
+	rsp, err := c.GetAgentsId(ctx, id, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
@@ -1196,16 +1305,16 @@ func (c *ClientWithResponses) GetAgentsIdWithResponse(ctx context.Context, id st
 }
 
 // PostAgentsIdAckWithBodyWithResponse request with arbitrary body returning *PostAgentsIdAckResponse
-func (c *ClientWithResponses) PostAgentsIdAckWithBodyWithResponse(ctx context.Context, id string, params *PostAgentsIdAckParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostAgentsIdAckResponse, error) {
-	rsp, err := c.PostAgentsIdAckWithBody(ctx, id, params, contentType, body, reqEditors...)
+func (c *ClientWithResponses) PostAgentsIdAckWithBodyWithResponse(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostAgentsIdAckResponse, error) {
+	rsp, err := c.PostAgentsIdAckWithBody(ctx, id, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
 	return ParsePostAgentsIdAckResponse(rsp)
 }
 
-func (c *ClientWithResponses) PostAgentsIdAckWithResponse(ctx context.Context, id string, params *PostAgentsIdAckParams, body PostAgentsIdAckJSONRequestBody, reqEditors ...RequestEditorFn) (*PostAgentsIdAckResponse, error) {
-	rsp, err := c.PostAgentsIdAck(ctx, id, params, body, reqEditors...)
+func (c *ClientWithResponses) PostAgentsIdAckWithResponse(ctx context.Context, id string, body PostAgentsIdAckJSONRequestBody, reqEditors ...RequestEditorFn) (*PostAgentsIdAckResponse, error) {
+	rsp, err := c.PostAgentsIdAck(ctx, id, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
@@ -1213,8 +1322,8 @@ func (c *ClientWithResponses) PostAgentsIdAckWithResponse(ctx context.Context, i
 }
 
 // PostAgentsIdPingWithResponse request returning *PostAgentsIdPingResponse
-func (c *ClientWithResponses) PostAgentsIdPingWithResponse(ctx context.Context, id string, params *PostAgentsIdPingParams, reqEditors ...RequestEditorFn) (*PostAgentsIdPingResponse, error) {
-	rsp, err := c.PostAgentsIdPing(ctx, id, params, reqEditors...)
+func (c *ClientWithResponses) PostAgentsIdPingWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*PostAgentsIdPingResponse, error) {
+	rsp, err := c.PostAgentsIdPing(ctx, id, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
@@ -1231,20 +1340,404 @@ func (c *ClientWithResponses) GetAgentsIdPollWithResponse(ctx context.Context, i
 }
 
 // PostAgentsIdResultsWithBodyWithResponse request with arbitrary body returning *PostAgentsIdResultsResponse
-func (c *ClientWithResponses) PostAgentsIdResultsWithBodyWithResponse(ctx context.Context, id string, params *PostAgentsIdResultsParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostAgentsIdResultsResponse, error) {
-	rsp, err := c.PostAgentsIdResultsWithBody(ctx, id, params, contentType, body, reqEditors...)
+func (c *ClientWithResponses) PostAgentsIdResultsWithBodyWithResponse(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostAgentsIdResultsResponse, error) {
+	rsp, err := c.PostAgentsIdResultsWithBody(ctx, id, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
 	return ParsePostAgentsIdResultsResponse(rsp)
 }
 
-func (c *ClientWithResponses) PostAgentsIdResultsWithResponse(ctx context.Context, id string, params *PostAgentsIdResultsParams, body PostAgentsIdResultsJSONRequestBody, reqEditors ...RequestEditorFn) (*PostAgentsIdResultsResponse, error) {
-	rsp, err := c.PostAgentsIdResults(ctx, id, params, body, reqEditors...)
+func (c *ClientWithResponses) PostAgentsIdResultsWithResponse(ctx context.Context, id string, body PostAgentsIdResultsJSONRequestBody, reqEditors ...RequestEditorFn) (*PostAgentsIdResultsResponse, error) {
+	rsp, err := c.PostAgentsIdResults(ctx, id, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
 	return ParsePostAgentsIdResultsResponse(rsp)
+}
+
+// GetAgentsWithResponse request returning *GetAgentsResponse
+func (c *ClientWithResponses) GetAgentsWithResponse(ctx context.Context, params *GetAgentsParams, reqEditors ...RequestEditorFn) (*GetAgentsResponse, error) {
+	rsp, err := c.GetAgents(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetAgentsResponse(rsp)
+}
+
+// PostAgentRegisterWithBodyWithResponse request with arbitrary body returning *PostAgentRegisterResponse
+func (c *ClientWithResponses) PostAgentRegisterWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostAgentRegisterResponse, error) {
+	rsp, err := c.PostAgentRegisterWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostAgentRegisterResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostAgentRegisterWithResponse(ctx context.Context, body PostAgentRegisterJSONRequestBody, reqEditors ...RequestEditorFn) (*PostAgentRegisterResponse, error) {
+	rsp, err := c.PostAgentRegister(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostAgentRegisterResponse(rsp)
+}
+
+// PostV1ScansWithBodyWithResponse request with arbitrary body returning *PostV1ScansResponse
+func (c *ClientWithResponses) PostV1ScansWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostV1ScansResponse, error) {
+	rsp, err := c.PostV1ScansWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostV1ScansResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostV1ScansWithResponse(ctx context.Context, body PostV1ScansJSONRequestBody, reqEditors ...RequestEditorFn) (*PostV1ScansResponse, error) {
+	rsp, err := c.PostV1Scans(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostV1ScansResponse(rsp)
+}
+
+// GetV1ScansScanIdWithResponse request returning *GetV1ScansScanIdResponse
+func (c *ClientWithResponses) GetV1ScansScanIdWithResponse(ctx context.Context, scanId string, reqEditors ...RequestEditorFn) (*GetV1ScansScanIdResponse, error) {
+	rsp, err := c.GetV1ScansScanId(ctx, scanId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetV1ScansScanIdResponse(rsp)
+}
+
+// ParseDeleteAgentsIdResponse parses an HTTP response from a DeleteAgentsIdWithResponse call
+func ParseDeleteAgentsIdResponse(rsp *http.Response) (*DeleteAgentsIdResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteAgentsIdResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			Ok bool `json:"ok"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetAgentsIdResponse parses an HTTP response from a GetAgentsIdWithResponse call
+func ParseGetAgentsIdResponse(rsp *http.Response) (*GetAgentsIdResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetAgentsIdResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest LocalAgent
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostAgentsIdAckResponse parses an HTTP response from a PostAgentsIdAckWithResponse call
+func ParsePostAgentsIdAckResponse(rsp *http.Response) (*PostAgentsIdAckResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostAgentsIdAckResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			Ok bool `json:"ok"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostAgentsIdPingResponse parses an HTTP response from a PostAgentsIdPingWithResponse call
+func ParsePostAgentsIdPingResponse(rsp *http.Response) (*PostAgentsIdPingResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostAgentsIdPingResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			Ok bool `json:"ok"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetAgentsIdPollResponse parses an HTTP response from a GetAgentsIdPollWithResponse call
+func ParseGetAgentsIdPollResponse(rsp *http.Response) (*GetAgentsIdPollResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetAgentsIdPollResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest []AgentPollTask
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostAgentsIdResultsResponse parses an HTTP response from a PostAgentsIdResultsWithResponse call
+func ParsePostAgentsIdResultsResponse(rsp *http.Response) (*PostAgentsIdResultsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostAgentsIdResultsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			Ok bool `json:"ok"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
 }
 
 // ParseGetAgentsResponse parses an HTTP response from a GetAgentsWithResponse call
@@ -1268,12 +1761,33 @@ func ParseGetAgentsResponse(rsp *http.Response) (*GetAgentsResponse, error) {
 		}
 		response.JSON200 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest ErrorResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
 		response.JSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
 
 	}
 
@@ -1304,40 +1818,73 @@ func ParsePostAgentRegisterResponse(rsp *http.Response) (*PostAgentRegisterRespo
 		}
 		response.JSON200 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest ErrorResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
 		response.JSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
 
 	}
 
 	return response, nil
 }
 
-// ParseDeleteAgentsIdResponse parses an HTTP response from a DeleteAgentsIdWithResponse call
-func ParseDeleteAgentsIdResponse(rsp *http.Response) (*DeleteAgentsIdResponse, error) {
+// ParsePostV1ScansResponse parses an HTTP response from a PostV1ScansWithResponse call
+func ParsePostV1ScansResponse(rsp *http.Response) (*PostV1ScansResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &DeleteAgentsIdResponse{
+	response := &PostV1ScansResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest struct {
-			Ok bool `json:"ok"`
-		}
+		var dest TriggerUserScanResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest ErrorResponse
@@ -1345,32 +1892,67 @@ func ParseDeleteAgentsIdResponse(rsp *http.Response) (*DeleteAgentsIdResponse, e
 			return nil, err
 		}
 		response.JSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
 
 	}
 
 	return response, nil
 }
 
-// ParseGetAgentsIdResponse parses an HTTP response from a GetAgentsIdWithResponse call
-func ParseGetAgentsIdResponse(rsp *http.Response) (*GetAgentsIdResponse, error) {
+// ParseGetV1ScansScanIdResponse parses an HTTP response from a GetV1ScansScanIdWithResponse call
+func ParseGetV1ScansScanIdResponse(rsp *http.Response) (*GetV1ScansScanIdResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetAgentsIdResponse{
+	response := &GetV1ScansScanIdResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest LocalAgent
+		var dest GetScanDetailsResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 499:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON499 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest ErrorResponse
@@ -1379,143 +1961,12 @@ func ParseGetAgentsIdResponse(rsp *http.Response) (*GetAgentsIdResponse, error) 
 		}
 		response.JSON500 = &dest
 
-	}
-
-	return response, nil
-}
-
-// ParsePostAgentsIdAckResponse parses an HTTP response from a PostAgentsIdAckWithResponse call
-func ParsePostAgentsIdAckResponse(rsp *http.Response) (*PostAgentsIdAckResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &PostAgentsIdAckResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest struct {
-			Ok bool `json:"ok"`
-		}
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
 		var dest ErrorResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
-		response.JSON500 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParsePostAgentsIdPingResponse parses an HTTP response from a PostAgentsIdPingWithResponse call
-func ParsePostAgentsIdPingResponse(rsp *http.Response) (*PostAgentsIdPingResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &PostAgentsIdPingResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest struct {
-			Ok bool `json:"ok"`
-		}
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON500 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseGetAgentsIdPollResponse parses an HTTP response from a GetAgentsIdPollWithResponse call
-func ParseGetAgentsIdPollResponse(rsp *http.Response) (*GetAgentsIdPollResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &GetAgentsIdPollResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest []AgentPollTask
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON500 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParsePostAgentsIdResultsResponse parses an HTTP response from a PostAgentsIdResultsWithResponse call
-func ParsePostAgentsIdResultsResponse(rsp *http.Response) (*PostAgentsIdResultsResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &PostAgentsIdResultsResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest struct {
-			Ok bool `json:"ok"`
-		}
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
-		var dest ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON500 = &dest
+		response.JSONDefault = &dest
 
 	}
 

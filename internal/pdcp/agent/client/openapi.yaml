@@ -14,11 +14,64 @@ info:
 servers:
   - url: 'http://localhost:8087' 
 paths:
-  /agents:
+  /v1/scans:
     post:
-      summary: Register local agent
+      summary: Create Scan
       tags:
-        - agent
+        - scans
+      operationId: post-v1-scans
+      responses:
+        '200':
+          $ref: '#/components/responses/TriggerUserScanResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+      description: Trigger a scan
+      security:
+        - X-API-Key: []
+      requestBody:
+        $ref: '#/components/requestBodies/TriggerUserScanRequest'
+      parameters: []
+  '/v1/scans/{scan_id}':
+    parameters:
+      - schema:
+          type: string
+        name: scan_id
+        in: path
+        required: true
+    get:
+      summary: Get Scan
+      tags:
+        - scans
+      responses:
+        '200':
+          $ref: '#/components/responses/GetScanDetailsResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '499':
+          $ref: '#/components/responses/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+      operationId: get-v1-scans-scan_id
+      description: Get details of a scan by scan ID
+      security:
+        - X-API-Key: []
+  /v1/agents:
+    post:
+      summary: Register Local Agent
+      tags:
+        - agents
       responses:
         '200':
           description: OK
@@ -34,16 +87,16 @@ paths:
                     type: boolean
                   id:
                     type: string
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
         '500':
           $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
       operationId: post-agent-register
-      parameters:
-        - schema:
-            type: integer
-            format: int64
-          in: query
-          name: user_id
-          required: true
+      parameters: []
       requestBody:
         content:
           application/json:
@@ -71,22 +124,22 @@ paths:
                   type: string
     parameters: []
     get:
-      summary: Get local agents
+      summary: Get Local Agents
       tags:
-        - agent
+        - agents
       responses:
         '200':
           $ref: '#/components/responses/GetAgents'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
         '500':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
           $ref: '#/components/responses/ErrorResponse'
       operationId: get-agents
       parameters:
-        - schema:
-            type: integer
-            format: int64
-          in: query
-          name: user_id
-          required: true
         - in: query
           name: offset
           schema:
@@ -96,11 +149,17 @@ paths:
           name: limit
           schema:
             type: integer
+            maximum: 10
+            minimum: 1
           description: The numbers of items to return
         - in: query
           name: status
           schema:
             type: string
+            enum:
+              - active
+              - inactive
+              - idle
   '/agents/{id}':
     parameters:
       - schema:
@@ -111,7 +170,7 @@ paths:
     get:
       summary: Get local agent
       tags:
-        - agent
+        - agents
       responses:
         '200':
           description: OK
@@ -119,20 +178,20 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/LocalAgent'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
         '500':
           $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
       operationId: get-agents-id
-      parameters:
-        - schema:
-            type: integer
-            format: int64
-          in: query
-          name: user_id
-          required: true
+      parameters: []
     delete:
       summary: Deregister local agent
       tags:
-        - agent
+        - agents
       responses:
         '200':
           description: OK
@@ -145,16 +204,16 @@ paths:
                 properties:
                   ok:
                     type: boolean
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
         '500':
           $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
       operationId: delete-agents-id
-      parameters:
-        - schema:
-            type: integer
-            format: int64
-          in: query
-          name: user_id
-          required: true
+      parameters: []
   '/agents/{id}/poll':
     parameters:
       - schema:
@@ -163,9 +222,9 @@ paths:
         in: path
         required: true
     get:
-      summary: Poll tasks for agent
+      summary: Poll Agent Tasks
       tags:
-        - agent
+        - agents
       responses:
         '200':
           description: OK
@@ -175,16 +234,16 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/AgentPollTask'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
         '500':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
           $ref: '#/components/responses/ErrorResponse'
       operationId: get-agents-id-poll
       parameters:
-        - schema:
-            type: integer
-            format: int64
-          in: query
-          name: user_id
-          required: true
         - schema:
             type: integer
           in: query
@@ -197,9 +256,9 @@ paths:
         in: path
         required: true
     post:
-      summary: Acknowledge agent tasks
+      summary: Acknowledge Agent Tasks
       tags:
-        - agent
+        - agents
       responses:
         '200':
           description: OK
@@ -212,16 +271,16 @@ paths:
                 properties:
                   ok:
                     type: boolean
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
         '500':
           $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
       operationId: post-agents-id-ack
-      parameters:
-        - schema:
-            type: integer
-            format: int64
-          in: query
-          name: user_id
-          required: true
+      parameters: []
       requestBody:
         content:
           application/json:
@@ -238,9 +297,9 @@ paths:
         in: path
         required: true
     post:
-      summary: Submit agent results
+      summary: Submit Agent Results
       tags:
-        - agent
+        - agents
       responses:
         '200':
           description: OK
@@ -253,16 +312,16 @@ paths:
                 properties:
                   ok:
                     type: boolean
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
         '500':
           $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
       operationId: post-agents-id-results
-      parameters:
-        - schema:
-            type: integer
-            format: int64
-          in: query
-          name: user_id
-          required: true
+      parameters: []
       requestBody:
         content:
           application/json:
@@ -273,9 +332,9 @@ paths:
                 format: byte
   '/agents/{id}/ping':
     post:
-      summary: Ping agent endpoint
+      summary: Ping Agent Endpoint
       tags:
-        - agent
+        - agents
       responses:
         '200':
           description: OK
@@ -288,16 +347,16 @@ paths:
                 properties:
                   ok:
                     type: boolean
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
         '500':
           $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
       operationId: post-agents-id-ping
-      parameters:
-        - schema:
-            type: integer
-            format: int64
-          in: query
-          name: user_id
-          required: true
+      parameters: []
     parameters:
       - schema:
           type: string
@@ -353,6 +412,85 @@ components:
         updated_at:
           type: string
           format: date-time
+    ScanStatusItem:
+      title: ScanStatusItem
+      type: object
+      required:
+        - scan_id
+        - status
+        - scan_time_elapsed
+        - progress
+        - failure_reason
+        - created_at
+        - updated_at
+        - total_target
+        - completed_at
+        - total_scan
+        - total_template
+        - name
+        - is_oss
+        - is_cloud
+      properties:
+        scan_id:
+          type: string
+        status:
+          type: string
+        scan_time_elapsed:
+          type: string
+        progress:
+          type: integer
+        failure_reason:
+          type: string
+        created_at:
+          type: string
+        updated_at:
+          type: string
+        total_target:
+          type: integer
+        completed_at:
+          type: string
+        total_scan:
+          type: integer
+        total_template:
+          type: integer
+        name:
+          type: string
+        severity:
+          type: object
+        is_oss:
+          type: boolean
+        is_cloud:
+          type: boolean
+        asset_ids:
+          type: array
+          items:
+            type: string
+        is_rescan:
+          type: boolean
+        public_templates:
+          type: array
+          items:
+            type: string
+        report_config_ids:
+          type: array
+          items:
+            type: string
+        rescan_count:
+          type: integer
+        scan_config_ids:
+          type: array
+          items:
+            type: string
+        template_ids:
+          type: array
+          items:
+            type: string
+        template_urls:
+          type: array
+          items:
+            type: string
+        schedule:
+          type: object
     AgentPollTask:
       title: AgentPollTask
       type: object
@@ -388,6 +526,67 @@ components:
       type: apiKey
       in: header
       name: X-API-Key
+  requestBodies:
+    TriggerUserScanRequest:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              targets:
+                type: array
+                items:
+                  type: string
+              templates:
+                type: array
+                items:
+                  type: string
+              assets:
+                type: array
+                items:
+                  type: string
+              private_templates:
+                type: array
+                items:
+                  type: object
+              name:
+                type: string
+              recommended:
+                type: boolean
+              all:
+                type: boolean
+              alerting_config_ids:
+                type: array
+                items:
+                  type: string
+              scan_config_ids:
+                type: array
+                items:
+                  type: string
+              reporting_config_ids:
+                type: array
+                items:
+                  type: string
+              early_templates:
+                type: array
+                items:
+                  type: string
+              exclude_targets:
+                type: array
+                items:
+                  type: string
+              enumeration_ids:
+                type: array
+                items:
+                  type: object
+              schedule_only:
+                type: boolean
+              disable_global_alert_config:
+                type: boolean
+              disable_global_report_config:
+                type: boolean
+              disable_global_scan_config:
+                type: boolean
   responses:
     GetAgents:
       description: Get Agents Response
@@ -414,6 +613,25 @@ components:
                 type: array
                 items:
                   $ref: '#/components/schemas/LocalAgent'
+    GetScanDetailsResponse:
+      description: Example response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ScanStatusItem'
+    TriggerUserScanResponse:
+      description: Example response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              id:
+                type: string
+              message:
+                type: string
+            required:
+              - message
     ErrorResponse:
       description: Bad request error response
       content:

@@ -120,6 +120,15 @@ func main() {
 
 	runner.ParseOptions(options)
 
+	if options.Agent {
+		gologger.Info().Msgf("Starting nuclei in PDCP agent mode...\n")
+
+		nucleiRunner := &runner.Runner{}
+		if err := nucleiRunner.RunLocalAgent(); err != nil {
+			gologger.Fatal().Msgf("Could not run nuclei agent: %s\n", err)
+		}
+		return
+	}
 	nucleiRunner, err := runner.New(options)
 	if err != nil {
 		gologger.Fatal().Msgf("Could not create runner: %s\n", err)
@@ -410,6 +419,8 @@ on extensive configurability, massive extensibility and ease of use.`)
 		flagSet.DynamicVar(&pdcpauth, "auth", "true", "configure projectdiscovery cloud (pdcp) api key"),
 		flagSet.BoolVarP(&options.EnableCloudUpload, "cloud-upload", "cup", false, "upload scan results to pdcp dashboard"),
 		flagSet.StringVarP(&options.ScanID, "scan-id", "sid", "", "upload scan results to given scan id"),
+		flagSet.BoolVar(&options.Agent, "agent", false, "enable agent mode for nuclei"),
+		flagSet.BoolVarP(&options.RunOnAgent, "run-on-agent", "roa", false, "run the provided scan on pdcp (self-hosted agents)"),
 	)
 
 	flagSet.CreateGroup("Authentication", "Authentication",

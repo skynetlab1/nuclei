@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
+	"log"
 	"net/http"
 	_ "net/http/pprof"
 	"os"
@@ -14,6 +16,7 @@ import (
 	"time"
 
 	"github.com/projectdiscovery/nuclei/v3/internal/pdcp"
+	"github.com/projectdiscovery/nuclei/v3/internal/pdcp/agent"
 	"github.com/projectdiscovery/nuclei/v3/pkg/authprovider"
 	"github.com/projectdiscovery/nuclei/v3/pkg/input/provider"
 	"github.com/projectdiscovery/nuclei/v3/pkg/installer"
@@ -417,6 +420,29 @@ func (r *Runner) setupPDCPUpload(writer output.Writer) output.Writer {
 		uploadWriter.SetScanID(r.options.ScanID)
 	}
 	return output.NewMultiWriter(writer, uploadWriter)
+}
+
+// RunLocalAgent runs the local agent for PDCP
+func (r *Runner) RunLocalAgent() error {
+	h := &pdcpauth.PDCPCredHandler{}
+	creds, err := h.GetCreds()
+	if err != nil {
+		return errors.Wrap(err, "could not get credentials for local agent")
+	}
+	gologger.Info().Msgf("Authenticated to %s\n", creds.Server)
+
+	f, err := os.OpenFile("/tmp/local-agent-log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		return errors.Wrap(err, "could not create log file")
+	}
+	multiWriter := io.MultiWriter(os.Stderr, f)
+	log.SetOutput(multiWriter)
+
+	if err := agent.RegisterAgent(creds); err != nil {
+		return errors.Wrap(err, "could not register agent")
+	}
+	f.Close()
+	return nil
 }
 
 // RunEnumeration sets up the input layer for giving input nuclei.

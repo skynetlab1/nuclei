@@ -373,6 +373,10 @@ type Options struct {
 	DisableUnsignedTemplates bool
 	// Disables cloud upload
 	EnableCloudUpload bool
+	// RunOnAgent specifies whether to execute the given scan on nuclei agent
+	RunOnAgent bool
+	// Agent specifies whether to run nuclei as an agent
+	Agent bool
 	// ScanID is the scan ID to use for cloud upload
 	ScanID string
 	// JsConcurrency is the number of concurrent js routines to run

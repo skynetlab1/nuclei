@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log"
 	"log/slog"
 	"math"
 	"net/http"
@@ -30,6 +29,7 @@ import (
 	agentproto "github.com/projectdiscovery/nuclei/v3/internal/pdcp/agent/proto"
 	"github.com/projectdiscovery/nuclei/v3/pkg/catalog/config"
 	"github.com/projectdiscovery/nuclei/v3/pkg/installer"
+	pdcpauth "github.com/projectdiscovery/utils/auth/pdcp"
 	"github.com/projectdiscovery/utils/batcher"
 	"github.com/projectdiscovery/utils/env"
 	"github.com/remeh/sizedwaitgroup"
@@ -126,15 +126,43 @@ func updateNucleiTemplatesTicker(d time.Duration, sc <-chan struct{}) {
 }
 
 var (
-	ServerURL = env.GetEnvOrDefault("PDCP_API_SERVER", "https://scan-dev.api.nuclei.sh")
-	ServerKey = env.GetEnvOrDefault("PDCP_API_KEY", "")
-	isDebug   = env.GetEnvOrDefault("DEBUG", true)
-
-	userID = 28
+	isDebug = env.GetEnvOrDefault("DEBUG", true)
 )
 
+func newAuroraClient(creds *pdcpauth.PDCPCredentials) (*client.ClientWithResponses, error) {
+	// First start by gathering the necessary information
+	// about the system and the agent.
+	apiKeyProvider, apiKeyProviderErr := securityprovider.NewSecurityProviderApiKey("header", pdcpauth.ApiKeyHeaderName, creds.APIKey)
+	if apiKeyProviderErr != nil {
+		return nil, errors.Wrap(apiKeyProviderErr, "could not create user key provider")
+	}
+	var opts []client.ClientOption
+	opts = append(opts, client.WithRequestEditorFn(apiKeyProvider.Intercept))
+	if isDebug {
+		opts = append(opts, client.WithRequestEditorFn(func(ctx context.Context, req *http.Request) error {
+			dumped, err := httputil.DumpRequest(req, true)
+			if err != nil {
+				return err
+			}
+			gologger.Debug().Msgf("Outgoing request: \n\n%s\n\n", string(dumped))
+			return nil
+		}))
+	}
+
+	auroraClient, err := client.NewClientWithResponses(
+		creds.Server,
+		opts...,
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not create user client")
+	}
+	return auroraClient, nil
+}
+
 // RegisterAgent registers the agent with the server.
-func RegisterAgent() error {
+func RegisterAgent(creds *pdcpauth.PDCPCredentials) error {
+	gologger.Info().Msgf("Installing nuclei-templates and housekeeping\n")
+
 	// Install nuclei-templates, incase they are not installed
 	if err := freshInstallTemplates(); err != nil {
 		return errors.Wrap(err, "failed to download nuclei-templates")
@@ -156,33 +184,11 @@ func RegisterAgent() error {
 		return errors.Wrap(err, "could not configure nuclei environment")
 	}
 
-	log.Printf("Configured nuclei environment: %v\n", globalConfiguration)
+	gologger.Info().Msgf("Configured nuclei environment\n")
 
-	// First start by gathering the necessary information
-	// about the system and the agent.
-	apiKeyProvider, apiKeyProviderErr := securityprovider.NewSecurityProviderApiKey("header", "X-API-Key", ServerKey)
-	if apiKeyProviderErr != nil {
-		return errors.Wrap(apiKeyProviderErr, "could not create user key provider")
-	}
-	var opts []client.ClientOption
-	opts = append(opts, client.WithRequestEditorFn(apiKeyProvider.Intercept))
-	if isDebug {
-		opts = append(opts, client.WithRequestEditorFn(func(ctx context.Context, req *http.Request) error {
-			dumped, err := httputil.DumpRequest(req, true)
-			if err != nil {
-				return err
-			}
-			log.Printf("[debug] Outgoing request: \n\n%s\n\n", string(dumped))
-			return nil
-		}))
-	}
-
-	auroraClient, err := client.NewClientWithResponses(
-		ServerURL,
-		opts...,
-	)
+	auroraClient, err := newAuroraClient(creds)
 	if err != nil {
-		return errors.Wrap(err, "could not create user client")
+		return errors.Wrap(err, "could not create aurora client")
 	}
 
 	var agentID *string
@@ -193,9 +199,7 @@ func RegisterAgent() error {
 			return errors.Wrap(err, "could not gather agent metadata")
 		}
 
-		resp, err := auroraClient.PostAgentRegisterWithResponse(context.TODO(), &client.PostAgentRegisterParams{
-			UserId: int64(userID),
-		}, client.PostAgentRegisterJSONRequestBody{
+		resp, err := auroraClient.PostAgentRegisterWithResponse(context.TODO(), client.PostAgentRegisterJSONRequestBody{
 			Arch:      meta.Arch,
 			CpuCores:  meta.CPU,
 			Hostname:  meta.Hostname,
@@ -215,9 +219,9 @@ func RegisterAgent() error {
 	if err := registerAgentFunc(); err != nil {
 		return errors.Wrap(err, "could not register agent")
 	}
-	log.Printf("Agent registered with id: %s\n", *agentID)
+	gologger.Info().Msgf("Agent registered with id: %s\n", *agentID)
 
-	fmt.Println("starting polling")
+	gologger.Info().Msgf("Starting polling...")
 	// Start polling the server for work
 
 	acknowledgeWork := func(ids []ackWorkItem) {
@@ -231,13 +235,11 @@ func RegisterAgent() error {
 		}
 
 		// Acknowledge the work
-		_, err := auroraClient.PostAgentsIdAckWithResponse(context.TODO(), *agentID, &client.PostAgentsIdAckParams{
-			UserId: int64(userID),
-		}, client.PostAgentsIdAckJSONRequestBody(agentAckReq))
+		_, err := auroraClient.PostAgentsIdAckWithResponse(context.TODO(), *agentID, client.PostAgentsIdAckJSONRequestBody(agentAckReq))
 		if err != nil {
-			log.Printf("could not acknowledge work: %s\n", err)
+			gologger.Error().Msgf("could not acknowledge work: %s\n", err)
 		}
-		log.Printf("Acknowledged work: %v\n", ids)
+		gologger.Info().Msgf("Acknowledged work: %v\n", ids)
 	}
 
 	gologger.DefaultLogger.SetMaxLevel(levels.LevelSilent)
@@ -252,13 +254,11 @@ func RegisterAgent() error {
 			}
 
 			// Send the results to the server
-			res, err := auroraClient.PostAgentsIdResultsWithResponse(context.TODO(), *agentID, &client.PostAgentsIdResultsParams{
-				UserId: int64(userID),
-			}, client.PostAgentsIdResultsJSONRequestBody(b))
+			res, err := auroraClient.PostAgentsIdResultsWithResponse(context.TODO(), *agentID, client.PostAgentsIdResultsJSONRequestBody(b))
 			if err != nil {
-				log.Printf("could not send results: %s\n", err)
+				gologger.Error().Msgf("could not send results: %s\n", err)
 			} else {
-				log.Printf("Sent results: %v : %d\n", string(res.Body), len(b))
+				gologger.Info().Msgf("Sent results: %s = %d\n", string(res.Body), len(b))
 			}
 		}),
 	)
@@ -293,36 +293,37 @@ func RegisterAgent() error {
 	// by acknowledging the work and sending the results.
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
+
 	for {
 		select {
 		case <-c:
-			fmt.Println("Shutting down agent")
-			_, err := auroraClient.DeleteAgentsIdWithResponse(context.TODO(), *agentID, &client.DeleteAgentsIdParams{
-				UserId: int64(userID),
-			})
+			gologger.Info().Msgf("Shutting down agent...\n")
+
+			_, err := auroraClient.DeleteAgentsIdWithResponse(context.TODO(), *agentID)
 			if err != nil {
-				log.Printf("could not delete agent: %s\n", err)
+				gologger.Error().Msgf("could not delete agent: %s\n", err)
 			}
 			swg.Wait()
 			return nil
 		default:
 			if err := pollAndDoWork(auroraClient, ackBatcher, *agentID, &swg); err != nil {
 				if strings.Contains(err.Error(), "could not get local agent") {
-					log.Printf("Agent not found: %+v\n", err)
-					log.Printf("Registering agent again\n")
+					gologger.Info().Msgf("Agent not found, trying to register again\n")
+
 					if err := registerAgentFunc(); err != nil {
-						log.Printf("could not register agent, trying after 1 min: %s\n", err)
+						gologger.Error().Msgf("could not register agent: %s, retrtying\n", err)
+
 						iterations++
 						if iterations == maxIterations {
-							log.Printf("could not register agent after %d attempts: %s\n", maxIterations, err)
+							gologger.Error().Msgf("could not register agent after %d attempts: %s\n", maxIterations, err)
 							return nil
 						}
 						time.Sleep(60 * time.Second)
 					} else {
-						log.Printf("Agent registered with id: %s\n", *agentID)
+						gologger.Info().Msgf("Agent registered with id: %s\n", *agentID)
 					}
 				}
-				log.Printf("could not poll and do work: %s\n", err)
+				gologger.Error().Msgf("could not poll and do work: %s\n", err)
 			}
 		}
 	}
@@ -350,11 +351,9 @@ func pollAndDoWork(
 		// Ping the server to keep the connection alive
 		// every 30 seconds.
 		if time.Since(lastPingTimestamp) >= 30*time.Second {
-			_, err := auroraClient.PostAgentsIdPingWithResponse(context.TODO(), agentID, &client.PostAgentsIdPingParams{
-				UserId: int64(userID),
-			})
+			_, err := auroraClient.PostAgentsIdPingWithResponse(context.TODO(), agentID)
 			if err != nil {
-				log.Printf("could not ping agent: %s\n", err)
+				gologger.Error().Msgf("could not ping agent: %s\n", err)
 				return errors.Wrap(err, "could not ping agent")
 			}
 		}
@@ -362,8 +361,7 @@ func pollAndDoWork(
 	}
 	// Poll the server for work
 	resp, err := auroraClient.GetAgentsIdPollWithResponse(context.TODO(), agentID, &client.GetAgentsIdPollParams{
-		UserId: int64(userID),
-		Count:  &count,
+		Count: &count,
 	})
 	if err != nil {
 		return errors.Wrap(err, "could not get agent work")
@@ -373,7 +371,7 @@ func pollAndDoWork(
 		if resp.JSON500 != nil {
 			return fmt.Errorf("%s", string(resp.Body))
 		} else {
-			log.Printf("No work non-200 body found: %+v\n", string(resp.Body))
+			gologger.Verbose().Msgf("No work found: %+v\n", string(resp.Body))
 		}
 		time.Sleep(30 * time.Second)
 		return nil
@@ -381,7 +379,7 @@ func pollAndDoWork(
 
 	data := *resp.JSON200
 	if len(data) == 0 {
-		fmt.Println("No work found 0 items")
+		gologger.Info().Msgf("No work found\n")
 		time.Sleep(30 * time.Second)
 		return nil
 	}
@@ -392,7 +390,7 @@ func pollAndDoWork(
 		value, _ := decompressZSTD(work.Value)
 		var req agentproto.ScanRequest
 		if err := proto.Unmarshal(value, &req); err != nil {
-			log.Printf("could not unmarshal scan request: %s\n", err)
+			gologger.Error().Msgf("could not unmarshal scan request: %s\n", err)
 			continue
 		}
 
@@ -402,7 +400,7 @@ func pollAndDoWork(
 			defer swg.Done()
 			defer runningWorkers.Add(-1)
 
-			log.Printf("[id:%s] [scan_id:%s] Got work: %v\n", work.Id, work.ScanId, req.String())
+			gologger.Info().Msgf("[id:%s] [scan_id:%s] Got work: %v\n", work.Id, work.ScanId, req.String())
 
 			config := globalConfiguration
 			config.ScanId = work.ScanId
@@ -414,7 +412,7 @@ func pollAndDoWork(
 			}
 
 			if err := ExecuteNucleiScan(context.Background(), req, slog.Default(), &config); err != nil {
-				log.Printf("could not execute nuclei scan: %s\n", err)
+				gologger.Error().Msgf("could not execute nuclei scan: %s\n", err)
 				return
 			}
 			ackBatcher.Append(ackWorkItem{
