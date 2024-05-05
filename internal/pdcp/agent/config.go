@@ -228,19 +228,19 @@ func (c *ReportingOptions) Encode() (string, error) {
 
 func (c *ReportingOptions) MergeReportingConfiguration(other *ReportingOptions) error {
 	if c.SplunkExporter != nil && other.SplunkExporter != nil {
-		return errors.New("Only one splunkhec report configuration allowed per scan.")
+		return errors.New("only one splunkhec report configuration allowed per scan.")
 	}
 	if c.ElasticsearchExporter != nil && other.ElasticsearchExporter != nil {
-		return errors.New("Only one elasticsearch report configuration allowed per scan.")
+		return errors.New("only one elasticsearch report configuration allowed per scan.")
 	}
 	if c.Jira != nil && other.Jira != nil {
-		return errors.New("Only one jira report configuration allowed per scan.")
+		return errors.New("only one jira report configuration allowed per scan.")
 	}
 	if c.GitLab != nil && other.GitLab != nil {
-		return errors.New("Only one gitlab report configuration allowed per scan.")
+		return errors.New("only one gitlab report configuration allowed per scan.")
 	}
 	if c.GitHub != nil && other.GitHub != nil {
-		return errors.New("Only one github report configuration allowed per scan.")
+		return errors.New("only one github report configuration allowed per scan.")
 	}
 	if c.SplunkExporter == nil && other.SplunkExporter != nil {
 		c.SplunkExporter = other.SplunkExporter
