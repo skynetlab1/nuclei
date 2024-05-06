@@ -381,6 +381,8 @@ type Options struct {
 	Agent bool
 	// ScanID is the scan ID to use for cloud upload
 	ScanID string
+	// ScanName is the optional name of the scan
+	ScanName string
 	// JsConcurrency is the number of concurrent js routines to run
 	JsConcurrency int
 	// SecretsFile is file containing secrets for nuclei

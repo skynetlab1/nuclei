@@ -445,6 +445,25 @@ func (r *Runner) RunLocalAgent() error {
 	return nil
 }
 
+func (r *Runner) runScanOnAgent() error {
+	var targets []string
+	r.inputProvider.Iterate(func(value *contextargs.MetaInput) bool {
+		targets = append(targets, value.Input)
+		return true
+	})
+	h := &pdcpauth.PDCPCredHandler{}
+	creds, err := h.GetCreds()
+	if err != nil {
+		return errors.Wrap(err, "could not get credentials for local agent")
+	}
+	gologger.Info().Msgf("Running scan on PDCP with cloud-agent")
+	err = agent.RunScanOnCloud(r.options, targets, r.options.Templates, creds)
+	if err != nil {
+		return errors.Wrap(err, "could not run scan on cloud agent")
+	}
+	return nil
+}
+
 // RunEnumeration sets up the input layer for giving input nuclei.
 // binary and runs the actual enumeration
 func (r *Runner) RunEnumeration() error {
@@ -540,13 +559,17 @@ func (r *Runner) RunEnumeration() error {
 	// This uses a separate parser to reduce time taken as
 	// normally nuclei does a lot of compilation and stuff
 	// for templates, which we don't want for these simp
-	if r.options.TemplateList || r.options.TemplateDisplay || r.options.TagList {
+	if r.options.TemplateList || r.options.TemplateDisplay || r.options.TagList || r.options.RunOnAgent {
 		if err := store.LoadTemplatesOnlyMetadata(); err != nil {
 			return err
 		}
 
 		if r.options.TagList {
 			r.listAvailableStoreTags(store)
+		} else if r.options.RunOnAgent {
+			if err := r.runScanOnAgent(); err != nil {
+				return err
+			}
 		} else {
 			r.listAvailableStoreTemplates(store)
 		}

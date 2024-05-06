@@ -587,6 +587,10 @@ components:
                 type: boolean
               disable_global_scan_config:
                 type: boolean
+              is_self_hosted_scan:
+                type: boolean
+              scan_config:
+                type: string
   responses:
     GetAgents:
       description: Get Agents Response

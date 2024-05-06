@@ -127,10 +127,12 @@ type TriggerUserScanRequest struct {
 	EarlyTemplates            *[]string                 `json:"early_templates,omitempty"`
 	EnumerationIds            *[]map[string]interface{} `json:"enumeration_ids,omitempty"`
 	ExcludeTargets            *[]string                 `json:"exclude_targets,omitempty"`
+	IsSelfHostedScan          *bool                     `json:"is_self_hosted_scan,omitempty"`
 	Name                      *string                   `json:"name,omitempty"`
 	PrivateTemplates          *[]map[string]interface{} `json:"private_templates,omitempty"`
 	Recommended               *bool                     `json:"recommended,omitempty"`
 	ReportingConfigIds        *[]string                 `json:"reporting_config_ids,omitempty"`
+	ScanConfig                *string                   `json:"scan_config,omitempty"`
 	ScanConfigIds             *[]string                 `json:"scan_config_ids,omitempty"`
 	ScheduleOnly              *bool                     `json:"schedule_only,omitempty"`
 	Targets                   *[]string                 `json:"targets,omitempty"`
@@ -182,10 +184,12 @@ type PostV1ScansJSONBody struct {
 	EarlyTemplates            *[]string                 `json:"early_templates,omitempty"`
 	EnumerationIds            *[]map[string]interface{} `json:"enumeration_ids,omitempty"`
 	ExcludeTargets            *[]string                 `json:"exclude_targets,omitempty"`
+	IsSelfHostedScan          *bool                     `json:"is_self_hosted_scan,omitempty"`
 	Name                      *string                   `json:"name,omitempty"`
 	PrivateTemplates          *[]map[string]interface{} `json:"private_templates,omitempty"`
 	Recommended               *bool                     `json:"recommended,omitempty"`
 	ReportingConfigIds        *[]string                 `json:"reporting_config_ids,omitempty"`
+	ScanConfig                *string                   `json:"scan_config,omitempty"`
 	ScanConfigIds             *[]string                 `json:"scan_config_ids,omitempty"`
 	ScheduleOnly              *bool                     `json:"schedule_only,omitempty"`
 	Targets                   *[]string                 `json:"targets,omitempty"`
